@@ -249,8 +249,8 @@
 
 <div class="container">
     <header>
-        <h1>A B S E N S I - K A R Y A W A N - N S N E T</h1>
-        <p>Sistem Absensi Karyawan & Perhitungan Denda Keterlambatan Kerja (Online Firebase)</p>
+        <h1>ABSENSI KARYAWAN NSNET</h1>
+        <p>Sistem Absensi Karyawan & Perhitungan Denda Keterlambatan Kerja </p>
         <p>INGAT... Hindari Keterlambatan Anda Demi Menjaga Keutuhan Gaji Anda</p>
     </header>
 
@@ -258,11 +258,11 @@
         <div class="clock-box" id="liveClock">--:--:-- WIB</div>
 
         <div class="rules-info">
-            ⚠️ <b>Ketentuan Absensi:</b><br>
-            • Setiap karyawan <b>hanya bisa 1x Absen Masuk & 1x Absen Pulang</b> dalam sehari.<br>
-            • Jam Masuk Kerja : <b>09:00:00 WIB</b>.<br>
-            • Absensi <b>WAJIB</b> dilakukan di lokasi kantor (Maksimal Radius 25 Meter).<br>
-            • Keterlambatan dikenakan denda sebesar <b>Rp 10.000/menit</b> (Maksimal 50% Gaji Pokok Harian).
+            ⚠️ <b>Ketentuan Absensi :</b><br>
+            • Setiap karyawan <b>Hanya bisa 1x Absen Masuk dan 1x Absen Pulang</b> dalam sehari.<br>
+            • Jam Masuk Kerja : <b>09 : 00 : 00 WIB</b>.<br>
+            • Absensi <b>WAJIB</b> dilakukan di lokasi kerja (Maksimal Radius 5 Meter).<br>
+            • Keterlambatan masuk kerja dikenakan potongan gaji sebesar <b>Rp 10.000/menit</b> (Maksimal 50% Dari Gaji Pokok Harian).
         </div>
 
         <form id="attendanceForm">
@@ -340,7 +340,7 @@
 
     <div class="card">
         <div class="table-header">
-            <h3>Rekap Absensi & Gaji Harian Karyawan (Realtime Firebase)</h3>
+            <h3>Rekap Absensi Dan Gaji Harian Karyawan </h3>
             <button class="btn-export" onclick="exportToCSV()">Export Excel / CSV</button>
         </div>
         <div style="overflow-x:auto;">
@@ -386,7 +386,7 @@
     // --- KOORDINAT & RADIUS KANTOR NSNET ---
     const KANTOR_LAT = 0.520538; 
     const KANTOR_LON = 121.952507;
-    const RADIUS_MAKSIMAL_METER = 25; // Jarak maksimal 25 meter dari kantor
+    const RADIUS_MAKSIMAL_METER = 5; // Jarak maksimal 5 meter dari kantor
 
     // 1. Jam Digital Otomatis
     function updateClock() {
@@ -475,7 +475,7 @@
                         statusDiv.innerText = `✅ LOKASI VALID: Di Area Kantor (Jarak: ${jarak} meter dari kantor)`;
                     } else {
                         statusDiv.className = "gps-status gps-out";
-                        statusDiv.innerText = `❌ LOKASI DITOLAK: Di luar lokasi kantor (Jarak: ${jarak} meter dari kantor). Maksimal 25m!`;
+                        statusDiv.innerText = `❌ LOKASI DITOLAK: Di luar lokasi kantor (Jarak: ${jarak} meter dari kantor). Maksimal 5m!`;
                     }
                 },
                 (error) => {
