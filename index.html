@@ -261,11 +261,23 @@
             ⚠️ <b>Ketentuan Absensi :</b><br>
             • Setiap karyawan <b>Hanya bisa 1x Absen Masuk dan 1x Absen Pulang</b> dalam sehari.<br>
             • Jam Masuk Kerja : <b>09 : 00 : 00 WIB</b>.<br>
-            • Absensi <b>WAJIB</b> dilakukan di lokasi kerja (Maksimal Radius 5 Meter).<br>
+            • Absensi <b>WAJIB</b> dilakukan di lokasi kerja (Maksimal Radius 20 Meter).<br>
             • Keterlambatan masuk kerja dikenakan potongan gaji sebesar <b>Rp 10.000/menit</b> (Maksimal 50% Dari Gaji Pokok Harian).
         </div>
 
         <form id="attendanceForm">
+            <!-- Pilihan Tanggal & Jam Absensi -->
+            <div class="row">
+                <div class="col form-group">
+                    <label for="tanggalAbsen">Tanggal Absensi</label>
+                    <input type="date" id="tanggalAbsen" required>
+                </div>
+                <div class="col form-group">
+                    <label for="jamAbsen">Jam Absensi</label>
+                    <input type="time" id="jamAbsen" step="1" required>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="karyawan">Pilih Karyawan</label>
                 <select id="karyawan" onchange="updateDataKaryawan()" required>
@@ -386,7 +398,22 @@
     // --- KOORDINAT & RADIUS KANTOR NSNET ---
     const KANTOR_LAT = 0.520538; 
     const KANTOR_LON = 121.952507;
-    const RADIUS_MAKSIMAL_METER = 20 ; // Jarak maksimal 20 meter dari kantor
+    const RADIUS_MAKSIMAL_METER = 20;
+
+    // Setting Nilai Default Input Tanggal & Jam Ke Waktu Saat Ini
+    function setWaktuDefault() {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+
+        document.getElementById('tanggalAbsen').value = `${yyyy}-${mm}-${dd}`;
+        document.getElementById('jamAbsen').value = `${hh}:${min}:${ss}`;
+    }
+    setWaktuDefault();
 
     // 1. Jam Digital Otomatis
     function updateClock() {
@@ -443,7 +470,7 @@
 
     // Hitung jarak 2 titik koordinat (Haversine Formula) dalam Meter
     function hitungJarakMeter(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // Radius bumi dalam meter
+        const R = 6371e3;
         const radLat1 = lat1 * Math.PI / 180;
         const radLat2 = lat2 * Math.PI / 180;
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -454,7 +481,7 @@
                   Math.sin(dLon / 2) * Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        return Math.round(R * c); // Jarak dalam meter
+        return Math.round(R * c);
     }
 
     // 3. Ambil Geolocation GPS & Validasi Jarak Kantor
@@ -467,7 +494,6 @@
                     userLon = position.coords.longitude;
                     document.getElementById('lokasi').value = `${userLat.toFixed(6)}, ${userLon.toFixed(6)}`;
 
-                    // Cek Jarak dengan Kantor
                     const jarak = hitungJarakMeter(userLat, userLon, KANTOR_LAT, KANTOR_LON);
                     
                     if (jarak <= RADIUS_MAKSIMAL_METER) {
@@ -475,7 +501,7 @@
                         statusDiv.innerText = `✅ LOKASI VALID: Di Area Kantor (Jarak: ${jarak} meter dari kantor)`;
                     } else {
                         statusDiv.className = "gps-status gps-out";
-                        statusDiv.innerText = `❌ LOKASI DITOLAK: Di luar lokasi kantor (Jarak: ${jarak} meter dari kantor). Maksimal 5m!`;
+                        statusDiv.innerText = `❌ LOKASI DITOLAK: Di luar lokasi kantor (Jarak: ${jarak} meter dari kantor). Maksimal 20m!`;
                     }
                 },
                 (error) => {
@@ -492,7 +518,7 @@
     }
     window.onload = getLocation;
 
-    // Kompresi foto agar penyimpanan Firebase ringan
+    // Kompresi foto
     function compressImage(file, callback) {
         const reader = new FileReader();
         reader.onload = function(event) {
@@ -525,14 +551,13 @@
         reader.readAsDataURL(file);
     }
 
-    // 4. Simpan Absensi ONLINE dengan Validasi Radius Kantor & Validasi 1x Per Hari
+    // 4. Simpan Absensi ONLINE dengan Hitungan Terlambat Berdasarkan Jam Input
     const form = document.getElementById('attendanceForm');
     const btnSubmit = document.getElementById('btnSubmit');
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // --- VALIDASI PENGECEKAN LOKASI KANTOR ---
         if (userLat === null || userLon === null) {
             alert("⚠️ LOKASI GPS BELUM TERDETEKSI!\n\nMohon aktifkan lokasi/GPS di HP/Komputer Anda dan izinkan browser mengakses lokasi.");
             return;
@@ -564,11 +589,17 @@
         const lokasi = document.getElementById('lokasi').value;
         const fotoInput = document.getElementById('foto').files[0];
 
-        const now = new Date();
-        const jam = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        const tanggal = now.toLocaleDateString('id-ID');
+        // Format Tanggal
+        const inputVal = document.getElementById('tanggalAbsen').value;
+        const parts = inputVal.split('-');
+        const tanggal = `${parts[2]}/${parts[1]}/${parts[0]}`;
 
-        // --- VALIDASI PENGECEKAN ABSEN GANDA ---
+        // Format Jam
+        const jamInput = document.getElementById('jamAbsen').value;
+        const jamParts = jamInput.split(':');
+        const jamFormat = `${jamParts[0]}.${jamParts[1]}`;
+
+        // Cek Pengecekan Absen Ganda
         const namaNormalized = nama.toLowerCase().trim();
         const sudahAbsenHariIni = currentAbsenData.some(item => 
             item.nama.toLowerCase().trim() === namaNormalized &&
@@ -584,20 +615,23 @@
         btnSubmit.disabled = true;
         btnSubmit.innerText = "MENGIRIM DATA ONLINE...";
 
-        // Hitung Keterlambatan & Batas Denda (Maksimal 50% Gaji)
+        // Hitung Keterlambatan Berdasarkan Jam Pilihan Pengguna
         let menitTerlambat = 0;
         let denda = 0;
         let gajiBersih = gajiPokok;
 
         if (tipe === "MASUK") {
-            const jamTarget = new Date();
-            jamTarget.setHours(9, 0, 0, 0); // Jam Masuk Target: 09:00:00
+            const jamAbsenUser = new Date();
+            jamAbsenUser.setHours(parseInt(jamParts[0]), parseInt(jamParts[1]), 0, 0);
 
-            if (now > jamTarget) {
-                const selisihMs = now - jamTarget;
+            const jamTarget = new Date();
+            jamTarget.setHours(9, 0, 0, 0); // Target Jam 09:00
+
+            if (jamAbsenUser > jamTarget) {
+                const selisihMs = jamAbsenUser - jamTarget;
                 menitTerlambat = Math.ceil(selisihMs / (1000 * 60));
                 const dendaAwal = menitTerlambat * 10000;
-                const dendaMaksimal = gajiPokok * 0.5; // Maksimal Denda 50%
+                const dendaMaksimal = gajiPokok * 0.5;
                 
                 denda = Math.min(dendaAwal, dendaMaksimal);
                 gajiBersih = gajiPokok - denda;
@@ -607,7 +641,7 @@
         if (fotoInput) {
             compressImage(fotoInput, function(fotoBase64) {
                 const dataAbsen = {
-                    jam: jam,
+                    jam: jamFormat,
                     tanggal: tanggal,
                     nama: nama,
                     jabatan: jabatan,
@@ -621,7 +655,6 @@
                     timestamp: firebase.database.ServerValue.TIMESTAMP
                 };
 
-                // Push ke Firebase Realtime Database
                 database.ref('absensi_nsnet').push(dataAbsen, (error) => {
                     btnSubmit.disabled = false;
                     btnSubmit.innerText = "SIMPAN ABSENSI ONLINE";
@@ -629,9 +662,10 @@
                     if (error) {
                         alert("Gagal menyimpan data ke server online: " + error.message);
                     } else {
-                        alert(`Absen Berhasil Disimpan ONLINE!\n\nNama: ${nama}\nJabatan: ${jabatan}\nTipe: ${tipe}\nGaji Pokok: Rp ${gajiPokok.toLocaleString('id-ID')}\nTerlambat: ${menitTerlambat} Mnt\nDenda: Rp ${denda.toLocaleString('id-ID')}\nGaji Bersih Diterima: Rp ${gajiBersih.toLocaleString('id-ID')}`);
+                        alert(`Absen Berhasil Disimpan ONLINE!\n\nNama: ${nama}\nJam: ${jamFormat}\nTanggal: ${tanggal}\nTipe: ${tipe}\nGaji Pokok: Rp ${gajiPokok.toLocaleString('id-ID')}\nTerlambat: ${menitTerlambat} Mnt\nDenda: Rp ${denda.toLocaleString('id-ID')}\nGaji Bersih Diterima: Rp ${gajiBersih.toLocaleString('id-ID')}`);
 
                         form.reset();
+                        setWaktuDefault();
                         updateDataKaryawan();
                         getLocation();
                     }
@@ -640,7 +674,7 @@
         }
     });
 
-    // 5. Baca Data Realtime dari Firebase & Tampilkan di Tabel
+    // 5. Baca Data Realtime dari Firebase
     database.ref('absensi_nsnet').on('value', (snapshot) => {
         const tableBody = document.getElementById('tableBody');
         tableBody.innerHTML = "";
@@ -658,7 +692,6 @@
             ...data[key]
         }));
 
-        // Urutkan dari yang paling baru
         currentAbsenData.sort((a, b) => b.timestamp - a.timestamp);
 
         currentAbsenData.forEach(item => {
@@ -684,28 +717,26 @@
         });
     });
 
-    // 6. Fungsi Hapus Absen Berdasarkan ID (Hanya Admin dengan PIN)
+    // 6. Fungsi Hapus Absen Berdasarkan ID
     function hapusAbsen(id, nama) {
-        const pinAdmin = "Terlambat"; // PIN DEFAULT ADMIN
+        const pinAdmin = "Terlambat";
         
         const inputPin = prompt(`MENGHAPUS ABSEN ${nama}\n\nMasukkan PIN Rahasia Admin:`);
         
-        if (inputPin === null) {
-            return;
-        }
+        if (inputPin === null) return;
 
         if (inputPin === pinAdmin) {
             if (confirm(`PIN Benar!\nYakin ingin menghapus data absen dari ${nama}?`)) {
                 database.ref('absensi_nsnet/' + id).remove()
                     .then(() => {
-                        alert(`Data absen ${nama} berhasil dihapus! Karyawan sudah bisa absen ulang.`);
+                        alert(`Data absen ${nama} berhasil dihapus!`);
                     })
                     .catch((error) => {
                         alert("Gagal menghapus data: " + error.message);
                     });
             }
         } else {
-            alert("⚠️ PIN ADMIN SALAH!\nAnda tidak memiliki akses untuk menghapus data ini.");
+            alert("⚠️ PIN ADMIN SALAH!");
         }
     }
 
