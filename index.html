@@ -386,7 +386,7 @@
     // --- KOORDINAT & RADIUS KANTOR NSNET ---
     const KANTOR_LAT = 0.520538; 
     const KANTOR_LON = 121.952507;
-    const RADIUS_MAKSIMAL_METER = 30 ; // Jarak maksimal 30 meter dari kantor
+    const RADIUS_MAKSIMAL_METER = 20 ; // Jarak maksimal 20 meter dari kantor
 
     // 1. Jam Digital Otomatis
     function updateClock() {
@@ -686,7 +686,7 @@
 
     // 6. Fungsi Hapus Absen Berdasarkan ID (Hanya Admin dengan PIN)
     function hapusAbsen(id, nama) {
-        const pinAdmin = "1234"; // PIN DEFAULT ADMIN
+        const pinAdmin = "Terlambat"; // PIN DEFAULT ADMIN
         
         const inputPin = prompt(`MENGHAPUS ABSEN ${nama}\n\nMasukkan PIN Rahasia Admin:`);
         
