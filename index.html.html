@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi & Hitung Gaji NSNET (Online Firebase)</title>
+    
+    <!-- Firebase SDK (Version 8 Compatible) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root {
+            --primary: #0066cc;
+            --secondary: #004488;
+            --bg: #f4f7f6;
+            --white: #ffffff;
+            --danger: #dc3545;
+            --success: #28a745;
+            --text: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            background: var(--primary);
+            color: var(--white);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .clock-box {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--secondary);
+            background: #eef5ff;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .rules-info {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px 15px;
+            border-radius: 5px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ffc107;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        .manual-box {
+            display: none;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed var(--primary);
+            margin-bottom: 15px;
+        }
+
+        button.btn-submit {
+            background-color: var(--primary);
+            color: var(--white);
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+            padding: 12px;
+        }
+
+        button.btn-submit:hover {
+            background-color: var(--secondary);
+        }
+
+        button.btn-export {
+            background-color: var(--success);
+            color: var(--white);
+            border: none;
+            padding: 8px 15px;
+            width: auto;
+            cursor: pointer;
+            float: right;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: var(--white);
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .badge-masuk {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .badge-pulang {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .badge-denda {
+            color: var(--danger);
+            font-weight: bold;
+        }
+
+        .preview-img {
+            max-width: 45px;
+            max-height: 45px;
+            border-radius: 3px;
+            object-fit: cover;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>A B S E N S I - K A R Y A W A N - N S N E T</h1>
+        <p>Sistem Absensi Karyawan & Perhitungan Denda Keterlambatan Kerja (Online Firebase)</p>
+        <p>INGAT... Hindari Keterlambatan Anda Demi Menjaga Keutuhan Gaji Anda</p>
+    </header>
+
+    <div class="card">
+        <div class="clock-box" id="liveClock">--:--:-- WIB</div>
+
+        <div class="rules-info">
+            ⚠️ <b>Ketentuan Jam Masuk Kerja & Denda :</b><br>
+            • Jam Masuk Kerja : <b>09:00:00 WIB</b>.<br>
+            • Keterlambatan dikenakan denda sebesar <b>Rp 10.000/menit</b>.<br>
+            • <b>Batas Maksimal Denda :</b> Maksimal <b>50% dari Gaji Pokok Harian</b> (Denda terpotong otomatis dari nominal yang diinput).
+        </div>
+
+        <form id="attendanceForm">
+            <div class="form-group">
+                <label for="karyawan">Pilih Karyawan</label>
+                <select id="karyawan" onchange="updateDataKaryawan()" required>
+                    <option value="">-- Pilih Nama Karyawan --</option>
+                    <optgroup label="Karyawan Tetap">
+                        <option value="RYAN USMAN" data-jabatan="Team Leader (Pemimpin Tim)" data-gaji="200000">RYAN USMAN (TL - Rp 200rb/hari)</option>
+                        <option value="TOMI PAKAYA" data-jabatan="ASISTEN TL Team Leader" data-gaji="150000">TOMI PAKAYA (Asisten TL - Rp 150rb/hari)</option>
+                        <option value="KASIM BAGI" data-jabatan="ANGGOTA" data-gaji="150000">KASIM BAGI (Anggota - Rp 150rb/hari)</option>
+                        <option value="YAZID MUSTAPA" data-jabatan="ANGGOTA" data-gaji="100000">YAZID MUSTAPA (Anggota - Rp 100rb/hari)</option>
+                    </optgroup>
+                    <optgroup label="Karyawan Pembantu / Lepas">
+                        <option value="MANUAL">Input Karyawan Tambahan/Pembantu</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <!-- Form Khusus Karyawan Tambahan / Pembantu -->
+            <div id="manualBox" class="manual-box">
+                <div class="form-group">
+                    <label for="namaManual">Nama Karyawan Tambahan</label>
+                    <input type="text" id="namaManual" placeholder="Masukkan nama lengkap pembantu/helper">
+                </div>
+                <div class="row">
+                    <div class="col form-group">
+                        <label for="jabatanManual">Jabatan / Posisi</label>
+                        <select id="jabatanManual">
+                            <option value="Helper / Teknisi Pembantu">Helper / Teknisi Pembantu</option>
+                            <option value="Anggota Tambahan">Anggota Tambahan</option>
+                        </select>
+                    </div>
+                    <div class="col form-group">
+                        <label for="gajiManual">Gaji Pokok / Hari (Rp)</label>
+                        <input type="number" id="gajiManual" placeholder="Contoh: 100000 s/d 200000" min="50000" max="500000" step="10000">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" id="autoBox">
+                <div class="col form-group">
+                    <label for="jabatan">Jabatan</label>
+                    <input type="text" id="jabatan" placeholder="Terisi otomatis" readonly>
+                </div>
+                <div class="col form-group">
+                    <label for="gajiPokok">Gaji Pokok / Hari</label>
+                    <input type="text" id="gajiPokok" placeholder="Terisi otomatis" readonly>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col form-group">
+                    <label for="tipe">Tipe Absen</label>
+                    <select id="tipe" required>
+                        <option value="MASUK">Absen Masuk</option>
+                        <option value="PULANG">Absen Pulang</option>
+                    </select>
+                </div>
+                <div class="col form-group">
+                    <label for="foto">Foto Selfie / Bukti</label>
+                    <input type="file" id="foto" accept="image/*" capture="user" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Koordinat Lokasi GPS</label>
+                <input type="text" id="lokasi" placeholder="Mengambil lokasi GPS..." readonly required>
+            </div>
+
+            <button type="submit" id="btnSubmit" class="btn-submit">SIMPAN ABSENSI ONLINE</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="table-header">
+            <h3>Rekap Absensi & Gaji Harian Karyawan (Realtime Firebase)</h3>
+            <button class="btn-export" onclick="exportToCSV()">Export Excel / CSV</button>
+        </div>
+        <div style="overflow-x:auto;">
+            <table id="rekapTable">
+                <thead>
+                    <tr>
+                        <th>Jam Masuk</th>
+                        <th>Nama Lenkap</th>
+                        <th>Jabatan</th>
+                        <th>Status</th>
+                        <th>Terlambat</th>
+                        <th>Denda</th>
+                        <th>Gaji Bersih</th>
+                        <th>Foto</th>
+                        <th>GPS</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="9" style="text-align:center;">Memuat data dari server Firebase...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Konfigurasi Database Online Firebase
+    const firebaseConfig = {
+        databaseURL: "https://nsnet-absensi-default-rtdb.firebaseio.com"
+    };
+
+    // Inisialisasi Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // 1. Jam Digital Otomatis
+    function updateClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('id-ID') + ' WIB';
+        const dateString = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('liveClock').innerHTML = `${dateString} | ${timeString}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 2. Control Form Input (Otomatis vs Manual)
+    function updateDataKaryawan() {
+        const select = document.getElementById('karyawan');
+        const selectedOption = select.options[select.selectedIndex];
+        const manualBox = document.getElementById('manualBox');
+        const autoBox = document.getElementById('autoBox');
+
+        const namaManual = document.getElementById('namaManual');
+        const gajiManual = document.getElementById('gajiManual');
+
+        if (select.value === "MANUAL") {
+            manualBox.style.display = "block";
+            autoBox.style.display = "none";
+            
+            namaManual.required = true;
+            gajiManual.required = true;
+
+            document.getElementById('jabatan').value = "";
+            document.getElementById('gajiPokok').value = "";
+        } else if (select.value !== "") {
+            manualBox.style.display = "none";
+            autoBox.style.display = "flex";
+
+            namaManual.required = false;
+            gajiManual.required = false;
+
+            const jabatan = selectedOption.getAttribute('data-jabatan');
+            const gaji = parseInt(selectedOption.getAttribute('data-gaji'));
+            
+            document.getElementById('jabatan').value = jabatan;
+            document.getElementById('gajiPokok').value = "Rp " + gaji.toLocaleString('id-ID');
+        } else {
+            manualBox.style.display = "none";
+            autoBox.style.display = "flex";
+
+            namaManual.required = false;
+            gajiManual.required = false;
+
+            document.getElementById('jabatan').value = "";
+            document.getElementById('gajiPokok').value = "";
+        }
+    }
+
+    // 3. Ambil Geolocation GPS
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    document.getElementById('lokasi').value = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+                },
+                (error) => {
+                    document.getElementById('lokasi').value = "GPS tidak aktif";
+                }
+            );
+        } else {
+            document.getElementById('lokasi').value = "Browser tidak mendukung GPS";
+        }
+    }
+    window.onload = getLocation;
+
+    // Fungsi kompresi foto agar penyimpanan Firebase ringan
+    function compressImage(file, callback) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const max_size = 400;
+
+                if (width > height) {
+                    if (width > max_size) {
+                        height *= max_size / width;
+                        width = max_size;
+                    }
+                } else {
+                    if (height > max_size) {
+                        width *= max_size / height;
+                        height = max_size;
+                    }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                callback(canvas.toDataURL('image/jpeg', 0.6));
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // 4. Simpan Absensi ONLINE ke Firebase Database
+    const form = document.getElementById('attendanceForm');
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = "MENGIRIM DATA ONLINE...";
+
+        const select = document.getElementById('karyawan');
+        let nama = "";
+        let jabatan = "";
+        let gajiPokok = 0;
+
+        if (select.value === "MANUAL") {
+            nama = document.getElementById('namaManual').value.trim();
+            jabatan = document.getElementById('jabatanManual').value;
+            gajiPokok = parseInt(document.getElementById('gajiManual').value) || 0;
+        } else {
+            const selectedOption = select.options[select.selectedIndex];
+            nama = selectedOption.value;
+            jabatan = document.getElementById('jabatan').value;
+            gajiPokok = parseInt(selectedOption.getAttribute('data-gaji')) || 0;
+        }
+
+        const tipe = document.getElementById('tipe').value;
+        const lokasi = document.getElementById('lokasi').value;
+        const fotoInput = document.getElementById('foto').files[0];
+
+        const now = new Date();
+        const jam = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const tanggal = now.toLocaleDateString('id-ID');
+
+        // Hitung Keterlambatan & Batas Denda (Maksimal 50% Gaji)
+        let menitTerlambat = 0;
+        let denda = 0;
+        let gajiBersih = gajiPokok;
+
+        if (tipe === "MASUK") {
+            const jamTarget = new Date();
+            jamTarget.setHours(9, 0, 0, 0); // Jam Masuk Target: 09:00:00
+
+            if (now > jamTarget) {
+                const selisihMs = now - jamTarget;
+                menitTerlambat = Math.ceil(selisihMs / (1000 * 60));
+                const dendaAwal = menitTerlambat * 10000;
+                const dendaMaksimal = gajiPokok * 0.5; // Maksimal Denda 50%
+                
+                denda = Math.min(dendaAwal, dendaMaksimal);
+                gajiBersih = gajiPokok - denda;
+            }
+        }
+
+        if (fotoInput) {
+            compressImage(fotoInput, function(fotoBase64) {
+                const dataAbsen = {
+                    jam: jam,
+                    tanggal: tanggal,
+                    nama: nama,
+                    jabatan: jabatan,
+                    tipe: tipe,
+                    menitTerlambat: menitTerlambat,
+                    denda: denda,
+                    gajiBersih: gajiBersih,
+                    foto: fotoBase64,
+                    lokasi: lokasi,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
+
+                // Push ke Firebase Realtime Database
+                database.ref('absensi_nsnet').push(dataAbsen, (error) => {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerText = "SIMPAN ABSENSI ONLINE";
+
+                    if (error) {
+                        alert("Gagal menyimpan data ke server online: " + error.message);
+                    } else {
+                        alert(`Absen Berhasil Disimpan ONLINE!\n\nNama: ${nama}\nJabatan: ${jabatan}\nTipe: ${tipe}\nTerlambat: ${menitTerlambat} Mnt\nDenda: Rp ${denda.toLocaleString('id-ID')}\nGaji Bersih Diterima: Rp ${gajiBersih.toLocaleString('id-ID')}`);
+
+                        form.reset();
+                        updateDataKaryawan();
+                        getLocation();
+                    }
+                });
+            });
+        }
+    });
+
+    // 5. Baca Data Realtime dari Firebase & Tampilkan di Tabel
+    database.ref('absensi_nsnet').on('value', (snapshot) => {
+        const tableBody = document.getElementById('tableBody');
+        tableBody.innerHTML = "";
+        const data = snapshot.val();
+
+        if (!data) {
+            tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Belum ada data absensi tersimpan di server.</td></tr>';
+            return;
+        }
+
+        // Urutkan dari data yang paling baru dimasukkan
+        const items = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+
+        items.forEach(item => {
+            const row = document.createElement('tr');
+            const badgeClass = item.tipe === 'MASUK' ? 'badge-masuk' : 'badge-pulang';
+
+            row.innerHTML = `
+                <td>${item.jam}</td>
+                <td><b>${item.nama}</b></td>
+                <td>${item.jabatan}</td>
+                <td><span class="${badgeClass}">${item.tipe}</span></td>
+                <td>${item.tipe === 'MASUK' ? (item.menitTerlambat > 0 ? `<span class="badge-denda">${item.menitTerlambat} Mnt</span>` : 'Tepat Waktu') : '-'}</td>
+                <td>${item.tipe === 'MASUK' ? (item.denda > 0 ? `<span class="badge-denda">Rp ${item.denda.toLocaleString('id-ID')}</span>` : 'Rp 0') : '-'}</td>
+                <td><b>Rp ${item.gajiBersih.toLocaleString('id-ID')}</b></td>
+                <td><img src="${item.foto}" class="preview-img"></td>
+                <td><a href="https://maps.google.com/?q=${item.lokasi}" target="_blank">Cek Map</a></td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+    });
+
+    // 6. Export Tabel Rekap ke File Excel (.CSV)
+    function exportToCSV() {
+        let table = document.getElementById("rekapTable");
+        let rows = table.querySelectorAll("tr");
+        let csv = [];
+
+        for (let i = 0; i < rows.length; i++) {
+            let row = [], cols = rows[i].querySelectorAll("td, th");
+            for (let j = 0; j < cols.length - 2; j++) {
+                let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, "").replace(/,/g, ";");
+                row.push(data);
+            }
+            csv.push(row.join(","));
+        }
+
+        if (csv.length <= 1) {
+            alert("Belum ada data absensi untuk di-export!");
+            return;
+        }
+
+        let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+        let downloadLink = document.createElement("a");
+        downloadLink.download = `Rekap_Absen_NSNET_Online_${new Date().toISOString().slice(0,10)}.csv`;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+    }
+</script>
+
+</body>
+</html>
