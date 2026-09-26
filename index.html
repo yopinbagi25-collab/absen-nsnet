@@ -266,15 +266,15 @@
         </div>
 
         <form id="attendanceForm">
-            <!-- Pilihan Tanggal & Jam Absensi -->
+            <!-- Pilihan Tanggal & Jam Absensi Manual/Otomatis -->
             <div class="row">
                 <div class="col form-group">
                     <label for="tanggalAbsen">Tanggal Absensi</label>
                     <input type="date" id="tanggalAbsen" required>
                 </div>
                 <div class="col form-group">
-                    <label for="jamAbsen">Jam Absensi</label>
-                    <input type="time" id="jamAbsen" step="1" required>
+                    <label for="jamAbsen">Jam Absensi (Format Detik)</label>
+                    <input type="text" id="jamAbsen" placeholder="Contoh: 18.47.08" required>
                 </div>
             </div>
 
@@ -400,7 +400,7 @@
     const KANTOR_LON = 121.952507;
     const RADIUS_MAKSIMAL_METER = 20;
 
-    // Setting Nilai Default Input Tanggal & Jam Ke Waktu Saat Ini
+    // Setting Nilai Default Input Tanggal & Jam (Format Jam.Menit.Detik)
     function setWaktuDefault() {
         const now = new Date();
         const yyyy = now.getFullYear();
@@ -411,7 +411,7 @@
         const ss = String(now.getSeconds()).padStart(2, '0');
 
         document.getElementById('tanggalAbsen').value = `${yyyy}-${mm}-${dd}`;
-        document.getElementById('jamAbsen').value = `${hh}:${min}:${ss}`;
+        document.getElementById('jamAbsen').value = `${hh}.${min}.${ss}`;
     }
     setWaktuDefault();
 
@@ -551,7 +551,7 @@
         reader.readAsDataURL(file);
     }
 
-    // 4. Simpan Absensi ONLINE dengan Hitungan Terlambat Berdasarkan Jam Input
+    // 4. Simpan Absensi ONLINE dengan Menyamakan Denda/Keterlambatan pada Status Pulang
     const form = document.getElementById('attendanceForm');
     const btnSubmit = document.getElementById('btnSubmit');
 
@@ -589,15 +589,13 @@
         const lokasi = document.getElementById('lokasi').value;
         const fotoInput = document.getElementById('foto').files[0];
 
-        // Format Tanggal
+        // Format Tanggal DD/MM/YYYY
         const inputVal = document.getElementById('tanggalAbsen').value;
         const parts = inputVal.split('-');
         const tanggal = `${parts[2]}/${parts[1]}/${parts[0]}`;
 
-        // Format Jam
-        const jamInput = document.getElementById('jamAbsen').value;
-        const jamParts = jamInput.split(':');
-        const jamFormat = `${jamParts[0]}.${jamParts[1]}`;
+        // Format Jam (Misal: 18.47.08)
+        const jamFormat = document.getElementById('jamAbsen').value;
 
         // Cek Pengecekan Absen Ganda
         const namaNormalized = nama.toLowerCase().trim();
@@ -615,17 +613,21 @@
         btnSubmit.disabled = true;
         btnSubmit.innerText = "MENGIRIM DATA ONLINE...";
 
-        // Hitung Keterlambatan Berdasarkan Jam Pilihan Pengguna
         let menitTerlambat = 0;
         let denda = 0;
         let gajiBersih = gajiPokok;
 
         if (tipe === "MASUK") {
+            // Hitung Keterlambatan Masuk dari jam pilihan (Jam Target: 09.00.00)
+            const jamStrParts = jamFormat.replace(/:/g, '.').split('.');
+            const jamNum = parseInt(jamStrParts[0]) || 0;
+            const minNum = parseInt(jamStrParts[1]) || 0;
+
             const jamAbsenUser = new Date();
-            jamAbsenUser.setHours(parseInt(jamParts[0]), parseInt(jamParts[1]), 0, 0);
+            jamAbsenUser.setHours(jamNum, minNum, 0, 0);
 
             const jamTarget = new Date();
-            jamTarget.setHours(9, 0, 0, 0); // Target Jam 09:00
+            jamTarget.setHours(9, 0, 0, 0);
 
             if (jamAbsenUser > jamTarget) {
                 const selisihMs = jamAbsenUser - jamTarget;
@@ -635,6 +637,20 @@
                 
                 denda = Math.min(dendaAwal, dendaMaksimal);
                 gajiBersih = gajiPokok - denda;
+            }
+        } else if (tipe === "PULANG") {
+            // Cari data MASUK hari ini untuk karyawan yang sama
+            const dataMasukHariIni = currentAbsenData.find(item => 
+                item.nama.toLowerCase().trim() === namaNormalized &&
+                item.tanggal === tanggal &&
+                item.tipe === "MASUK"
+            );
+
+            // Jika ada data MASUK, samakan Keterlambatan, Denda, & Gaji Bersih
+            if (dataMasukHariIni) {
+                menitTerlambat = dataMasukHariIni.menitTerlambat || 0;
+                denda = dataMasukHariIni.denda || 0;
+                gajiBersih = dataMasukHariIni.gajiBersih !== undefined ? dataMasukHariIni.gajiBersih : gajiPokok;
             }
         }
 
@@ -704,9 +720,9 @@
                 <td><b>${item.nama}</b></td>
                 <td><b>${item.jabatan}</b></td>
                 <td><span class="${badgeClass}">${item.tipe}</span></td>
-                <td>${item.tipe === 'MASUK' ? (item.menitTerlambat > 0 ? `<span class="badge-denda">${item.menitTerlambat} Mnt</span>` : 'Tepat Waktu') : '-'}</td>
+                <td>${item.menitTerlambat > 0 ? `<span class="badge-denda">${item.menitTerlambat} Mnt</span>` : '-'}</td>
                 <td><b>Rp ${nominalGajiPokok.toLocaleString('id-ID')}</b></td>
-                <td>${item.tipe === 'MASUK' ? (item.denda > 0 ? `<span class="badge-denda">Rp ${item.denda.toLocaleString('id-ID')}</span>` : 'Rp 0') : '-'}</td>
+                <td>${item.denda > 0 ? `<span class="badge-denda">Rp ${item.denda.toLocaleString('id-ID')}</span>` : '-'}</td>
                 <td><b>Rp ${item.gajiBersih.toLocaleString('id-ID')}</b></td>
                 <td><img src="${item.foto}" class="preview-img"></td>
                 <td><a href="https://maps.google.com/?q=${item.lokasi}" target="_blank">Cek Map</a></td>
