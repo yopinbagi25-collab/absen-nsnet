@@ -259,25 +259,13 @@
 
         <div class="rules-info">
             ⚠️ <b>Ketentuan Absensi :</b><br>
-            • Setiap karyawan <b>Hanya bisa 1x Absen Masuk dan 1x Absen Pulang</b> dalam sehari.<br>
+            • Setiap karyawan <b>Hanya bisa 1x absen masuk dan 1x absen pulang</b> dalam sehari.<br>
             • Jam Masuk Kerja : <b>09 : 00 : 00 WIB</b>.<br>
-            • Absensi <b>WAJIB</b> dilakukan di lokasi kerja (Maksimal Radius 20 Meter).<br>
-            • Keterlambatan masuk kerja dikenakan potongan gaji sebesar <b>Rp 10.000/menit</b> (Maksimal 50% Dari Gaji Pokok Harian).
+            • Absensi <b>WAJIB</b> dilakukan di lokasi kerja.<br>
+            • Keterlambatan masuk kerja dikenakan potongan gaji sebesar <b>Rp 10.000/menit</b> (Maksimal 50% dari gaji pokok harian).
         </div>
 
         <form id="attendanceForm">
-            <!-- Pilihan Tanggal & Jam Absensi Manual/Otomatis -->
-            <div class="row">
-                <div class="col form-group">
-                    <label for="tanggalAbsen">Tanggal Absensi</label>
-                    <input type="date" id="tanggalAbsen" required>
-                </div>
-                <div class="col form-group">
-                    <label for="jamAbsen">Jam Absensi (Format Detik)</label>
-                    <input type="text" id="jamAbsen" placeholder="Contoh: 18.47.08" required>
-                </div>
-            </div>
-
             <div class="form-group">
                 <label for="karyawan">Pilih Karyawan</label>
                 <select id="karyawan" onchange="updateDataKaryawan()" required>
@@ -399,21 +387,6 @@
     const KANTOR_LAT = 0.520538; 
     const KANTOR_LON = 121.952507;
     const RADIUS_MAKSIMAL_METER = 20;
-
-    // Setting Nilai Default Input Tanggal & Jam (Format Jam.Menit.Detik)
-    function setWaktuDefault() {
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        const hh = String(now.getHours()).padStart(2, '0');
-        const min = String(now.getMinutes()).padStart(2, '0');
-        const ss = String(now.getSeconds()).padStart(2, '0');
-
-        document.getElementById('tanggalAbsen').value = `${yyyy}-${mm}-${dd}`;
-        document.getElementById('jamAbsen').value = `${hh}.${min}.${ss}`;
-    }
-    setWaktuDefault();
 
     // 1. Jam Digital Otomatis
     function updateClock() {
@@ -589,13 +562,17 @@
         const lokasi = document.getElementById('lokasi').value;
         const fotoInput = document.getElementById('foto').files[0];
 
-        // Format Tanggal DD/MM/YYYY
-        const inputVal = document.getElementById('tanggalAbsen').value;
-        const parts = inputVal.split('-');
-        const tanggal = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        // Tanggal dan Jam diambil secara otomatis dari waktu saat ini
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const yyyy = now.getFullYear();
+        const tanggal = `${dd}/${mm}/${yyyy}`;
 
-        // Format Jam (Misal: 18.47.08)
-        const jamFormat = document.getElementById('jamAbsen').value;
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        const jamFormat = `${hh}.${min}.${ss}`;
 
         // Cek Pengecekan Absen Ganda
         const namaNormalized = nama.toLowerCase().trim();
@@ -618,19 +595,11 @@
         let gajiBersih = gajiPokok;
 
         if (tipe === "MASUK") {
-            // Hitung Keterlambatan Masuk dari jam pilihan (Jam Target: 09.00.00)
-            const jamStrParts = jamFormat.replace(/:/g, '.').split('.');
-            const jamNum = parseInt(jamStrParts[0]) || 0;
-            const minNum = parseInt(jamStrParts[1]) || 0;
+            // Jam Target Masuk: 09:00:00
+            const jamTarget = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0);
 
-            const jamAbsenUser = new Date();
-            jamAbsenUser.setHours(jamNum, minNum, 0, 0);
-
-            const jamTarget = new Date();
-            jamTarget.setHours(9, 0, 0, 0);
-
-            if (jamAbsenUser > jamTarget) {
-                const selisihMs = jamAbsenUser - jamTarget;
+            if (now > jamTarget) {
+                const selisihMs = now - jamTarget;
                 menitTerlambat = Math.ceil(selisihMs / (1000 * 60));
                 const dendaAwal = menitTerlambat * 10000;
                 const dendaMaksimal = gajiPokok * 0.5;
@@ -681,7 +650,6 @@
                         alert(`Absen Berhasil Disimpan ONLINE!\n\nNama: ${nama}\nJam: ${jamFormat}\nTanggal: ${tanggal}\nTipe: ${tipe}\nGaji Pokok: Rp ${gajiPokok.toLocaleString('id-ID')}\nTerlambat: ${menitTerlambat} Mnt\nDenda: Rp ${denda.toLocaleString('id-ID')}\nGaji Bersih Diterima: Rp ${gajiBersih.toLocaleString('id-ID')}`);
 
                         form.reset();
-                        setWaktuDefault();
                         updateDataKaryawan();
                         getLocation();
                     }
