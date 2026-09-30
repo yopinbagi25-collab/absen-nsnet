@@ -271,10 +271,10 @@
                 <select id="karyawan" onchange="updateDataKaryawan()" required>
                     <option value="">-- Pilih Nama Karyawan --</option>
                     <optgroup label="Karyawan Tetap">
-                        <option value="RYAN USMAN" data-jabatan="Team Leader (Pemimpin Tim)" data-gaji="200000">RYAN USMAN (TL - Rp 200rb/hari)</option>
-                        <option value="TOMI PAKAYA" data-jabatan="ASISTEN TL Team Leader" data-gaji="150000">TOMI PAKAYA (Asisten TL - Rp 150rb/hari)</option>
-                        <option value="KASIM BAGI" data-jabatan="ANGGOTA" data-gaji="150000">KASIM BAGI (Anggota - Rp 150rb/hari)</option>
-                        <option value="YAZID MUSTAPA" data-jabatan="ANGGOTA" data-gaji="100000">YAZID MUSTAPA (Anggota - Rp 100rb/hari)</option>
+                        <option value="RYAN USMAN" data-jabatan="Team Leader (Pemimpin Tim)" data-gaji="200000">RYAN USMAN</option>
+                        <option value="TOMI PAKAYA" data-jabatan="ANGGOTA" data-gaji="150000">TOMI PAKAYA</option>
+                        <option value="KASIM BAGI" data-jabatan="ANGGOTA" data-gaji="150000">KASIM BAGI</option>
+                        <option value="YAZID MUSTAPA" data-jabatan="ANGGOTA" data-gaji="150000">YAZID MUSTAPA</option>
                     </optgroup>
                     <optgroup label="Karyawan Pembantu / Lepas">
                         <option value="MANUAL">Input Karyawan Tambahan/Pembantu</option>
@@ -724,8 +724,19 @@
         }
     }
 
-    // 7. Export Tabel Rekap ke File Excel (.CSV)
+    // 7. Export Tabel Rekap ke File Excel (.CSV) - KHUSUS ADMIN (PAKAI PIN)
     function exportToCSV() {
+        const pinAdmin = "Terlambat";
+        
+        const inputPin = prompt("EXPORT REKAP ABSENSI\n\nMasukkan PIN Rahasia Admin untuk mengunduh file:");
+        
+        if (inputPin === null) return;
+
+        if (inputPin !== pinAdmin) {
+            alert("⚠️ PIN ADMIN SALAH!\n\nAkses download hanya diberikan kepada Admin.");
+            return;
+        }
+
         let table = document.getElementById("rekapTable");
         let rows = table.querySelectorAll("tr");
         let csv = [];
