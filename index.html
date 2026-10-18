@@ -11,13 +11,20 @@
 
     <style>
         :root {
-            --primary: #0066cc;
-            --secondary: #004488;
-            --bg: #f4f7f6;
+            --bg-card: #0d1b2a;
+            --table-header: #003366;
+            --table-row: #021a36;
+            --table-row-alt: #052247;
+            --border-color: #1c355e;
+            
+            --primary: #007bff;
+            --secondary: #0056b3;
             --white: #ffffff;
+            --text-light: #e0e6ed;
             --danger: #dc3545;
             --success: #28a745;
-            --text: #333333;
+            --warning: #ffc107;
+            --purple: #8a2be2;
         }
 
         * {
@@ -27,10 +34,20 @@
             padding: 0;
         }
 
+        /* LATAR BELAKANG ANIMASI RGB SANGAT CLEAR & MENYALA */
         body {
-            background-color: var(--bg);
-            color: var(--text);
+            background: linear-gradient(-45deg, #ff0055, #7928ca, #0070f3, #00dfd8, #00ff87, #ff0055);
+            background-size: 400% 400%;
+            animation: vibrantRGB 8s ease infinite;
+            color: var(--text-light);
             padding: 15px;
+            min-height: 100vh;
+        }
+
+        @keyframes vibrantRGB {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .container {
@@ -41,30 +58,37 @@
         header {
             text-align: center;
             margin-bottom: 20px;
-            background: var(--primary);
+            background: var(--bg-card);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             color: var(--white);
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
         }
 
         header h1 {
             font-size: 24px;
             letter-spacing: 1px;
+            color: #38bdf8;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
         }
 
         header p {
             font-size: 13px;
             opacity: 0.9;
             margin-top: 5px;
+            color: #94a3b8;
         }
 
         .card {
-            background: var(--white);
+            background: var(--bg-card);
+            border: 2px solid rgba(255, 255, 255, 0.15);
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
             margin-bottom: 20px;
+            backdrop-filter: blur(10px);
         }
 
         .clock-box {
@@ -72,20 +96,22 @@
             font-size: 18px;
             font-weight: bold;
             margin-bottom: 15px;
-            color: var(--secondary);
-            background: #eef5ff;
+            color: var(--warning);
+            background: #061121;
+            border: 1px solid #1e3a8a;
             padding: 10px;
             border-radius: 8px;
+            text-shadow: 0 0 8px rgba(255, 193, 7, 0.4);
         }
 
         .rules-info {
-            background: #fff3cd;
-            color: #856404;
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffe082;
             padding: 12px 15px;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 13px;
             margin-bottom: 15px;
-            border-left: 4px solid #ffc107;
+            border-left: 4px solid var(--warning);
             line-height: 1.5;
         }
 
@@ -98,14 +124,23 @@
             margin-bottom: 5px;
             font-weight: bold;
             font-size: 14px;
+            color: var(--text-light);
         }
 
         input, select, button {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            background-color: #061121;
+            border: 1px solid var(--border-color);
+            color: #ffffff;
+            border-radius: 6px;
             font-size: 14px;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
         }
 
         .row {
@@ -119,7 +154,7 @@
 
         .manual-box {
             display: none;
-            background: #f8f9fa;
+            background: #061121;
             padding: 15px;
             border-radius: 8px;
             border: 1px dashed var(--primary);
@@ -132,13 +167,16 @@
             border: none;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s;
             margin-top: 10px;
             padding: 12px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
         }
 
         button.btn-submit:hover {
             background-color: var(--secondary);
+            transform: translateY(-2px);
         }
 
         button.btn-export {
@@ -148,16 +186,20 @@
             padding: 8px 15px;
             width: auto;
             cursor: pointer;
-            float: right;
-            border-radius: 5px;
+            border-radius: 6px;
             font-weight: bold;
+            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);
+        }
+
+        button.btn-export:hover {
+            background-color: #218838;
         }
 
         .btn-delete {
             background-color: var(--danger);
             color: white;
             border: none;
-            padding: 5px 10px;
+            padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
@@ -168,15 +210,22 @@
             background-color: #bd2130;
         }
 
+        .table-scroll-container {
+            max-height: 420px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-            background: var(--white);
+            background: var(--table-row);
         }
 
         table, th, td {
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
         }
 
         th, td {
@@ -184,17 +233,25 @@
             text-align: center;
             vertical-align: middle;
             font-size: 12px;
+            color: var(--text-light);
         }
 
         th {
-            background-color: var(--primary);
+            background-color: var(--table-header);
             color: var(--white);
             font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: var(--table-row-alt);
         }
 
         .badge-masuk {
-            background-color: #d4edda;
-            color: #155724;
+            background-color: var(--success);
+            color: #ffffff;
             padding: 4px 8px;
             border-radius: 3px;
             font-weight: bold;
@@ -202,8 +259,8 @@
         }
 
         .badge-pulang {
-            background-color: #f8d7da;
-            color: #721c24;
+            background-color: var(--purple);
+            color: #ffffff;
             padding: 4px 8px;
             border-radius: 3px;
             font-weight: bold;
@@ -211,17 +268,18 @@
         }
 
         .badge-denda {
-            color: var(--danger);
+            color: #ff6b6b;
             font-weight: bold;
         }
 
         .preview-img {
-            max-width: 45px;
-            max-height: 45px;
+            width: 36px;
+            height: 36px;
             border-radius: 3px;
             object-fit: cover;
             display: block;
             margin: 0 auto;
+            border: 1px solid var(--border-color);
         }
 
         .table-header {
@@ -233,7 +291,7 @@
         .table-header h3 {
             font-weight: 800;
             font-size: 18px;
-            color: var(--secondary);
+            color: var(--warning);
         }
 
         .gps-status {
@@ -241,8 +299,16 @@
             margin-top: 5px;
             font-weight: bold;
         }
-        .gps-in { color: #28a745; }
-        .gps-out { color: #dc3545; }
+        .gps-in { color: #00ff87; }
+        .gps-out { color: #ff6b6b; }
+        
+        a {
+            color: #38bdf8;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -343,7 +409,8 @@
             <h3>Rekap Absensi Dan Gaji Harian Karyawan </h3>
             <button class="btn-export" onclick="exportToCSV()">Export Excel / CSV</button>
         </div>
-        <div style="overflow-x:auto;">
+        
+        <div class="table-scroll-container">
             <table id="rekapTable">
                 <thead>
                     <tr>
@@ -374,21 +441,17 @@
         databaseURL: "https://nsnet-absensi-default-rtdb.firebaseio.com"
     };
 
-    // Inisialisasi Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Variable global
     let currentAbsenData = [];
     let userLat = null;
     let userLon = null;
 
-    // --- KOORDINAT & RADIUS KANTOR NSNET ---
     const KANTOR_LAT = 0.520538; 
     const KANTOR_LON = 121.952507;
     const RADIUS_MAKSIMAL_METER = 20;
 
-    // 1. Jam Digital Otomatis
     function updateClock() {
         const now = new Date();
         const timeString = now.toLocaleTimeString('id-ID') + ' WIB';
@@ -398,7 +461,6 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // 2. Control Form Input (Otomatis vs Manual)
     function updateDataKaryawan() {
         const select = document.getElementById('karyawan');
         const selectedOption = select.options[select.selectedIndex];
@@ -441,7 +503,6 @@
         }
     }
 
-    // Hitung jarak 2 titik koordinat (Haversine Formula) dalam Meter
     function hitungJarakMeter(lat1, lon1, lat2, lon2) {
         const R = 6371e3;
         const radLat1 = lat1 * Math.PI / 180;
@@ -457,7 +518,6 @@
         return Math.round(R * c);
     }
 
-    // 3. Ambil Geolocation GPS & Validasi Jarak Kantor
     function getLocation() {
         const statusDiv = document.getElementById('gpsStatus');
         if (navigator.geolocation) {
@@ -491,7 +551,6 @@
     }
     window.onload = getLocation;
 
-    // Kompresi foto
     function compressImage(file, callback) {
         const reader = new FileReader();
         reader.onload = function(event) {
@@ -524,7 +583,6 @@
         reader.readAsDataURL(file);
     }
 
-    // 4. Simpan Absensi ONLINE dengan Menyamakan Denda/Keterlambatan pada Status Pulang
     const form = document.getElementById('attendanceForm');
     const btnSubmit = document.getElementById('btnSubmit');
 
@@ -562,7 +620,6 @@
         const lokasi = document.getElementById('lokasi').value;
         const fotoInput = document.getElementById('foto').files[0];
 
-        // Tanggal dan Jam diambil secara otomatis dari waktu saat ini
         const now = new Date();
         const dd = String(now.getDate()).padStart(2, '0');
         const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -574,7 +631,6 @@
         const ss = String(now.getSeconds()).padStart(2, '0');
         const jamFormat = `${hh}.${min}.${ss}`;
 
-        // Cek Pengecekan Absen Ganda
         const namaNormalized = nama.toLowerCase().trim();
         const sudahAbsenHariIni = currentAbsenData.some(item => 
             item.nama.toLowerCase().trim() === namaNormalized &&
@@ -595,7 +651,6 @@
         let gajiBersih = gajiPokok;
 
         if (tipe === "MASUK") {
-            // Jam Target Masuk: 09:00:00
             const jamTarget = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0);
 
             if (now > jamTarget) {
@@ -608,14 +663,12 @@
                 gajiBersih = gajiPokok - denda;
             }
         } else if (tipe === "PULANG") {
-            // Cari data MASUK hari ini untuk karyawan yang sama
             const dataMasukHariIni = currentAbsenData.find(item => 
                 item.nama.toLowerCase().trim() === namaNormalized &&
                 item.tanggal === tanggal &&
                 item.tipe === "MASUK"
             );
 
-            // Jika ada data MASUK, samakan Keterlambatan, Denda, & Gaji Bersih
             if (dataMasukHariIni) {
                 menitTerlambat = dataMasukHariIni.menitTerlambat || 0;
                 denda = dataMasukHariIni.denda || 0;
@@ -658,7 +711,6 @@
         }
     });
 
-    // 5. Baca Data Realtime dari Firebase
     database.ref('absensi_nsnet').on('value', (snapshot) => {
         const tableBody = document.getElementById('tableBody');
         tableBody.innerHTML = "";
@@ -701,7 +753,6 @@
         });
     });
 
-    // 6. Fungsi Hapus Absen Berdasarkan ID
     function hapusAbsen(id, nama) {
         const pinAdmin = "Terlambat";
         
@@ -724,7 +775,6 @@
         }
     }
 
-    // 7. Export Tabel Rekap ke File Excel (.CSV) - KHUSUS ADMIN (PAKAI PIN)
     function exportToCSV() {
         const pinAdmin = "Terlambat";
         
