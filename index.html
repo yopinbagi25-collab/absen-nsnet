@@ -1,819 +1,472 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absensi & Hitung Gaji NSNET (Online Firebase)</title>
-    
-    <!-- Firebase SDK (Version 8 Compatible) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Pelanggan WiFi NSNET</title>
 
-    <style>
-        :root {
-            --bg-card: #0d1b2a;
-            --table-header: #003366;
-            --table-row: #021a36;
-            --table-row-alt: #052247;
-            --border-color: #1c355e;
-            
-            --primary: #007bff;
-            --secondary: #0056b3;
-            --white: #ffffff;
-            --text-light: #e0e6ed;
-            --danger: #dc3545;
-            --success: #28a745;
-            --warning: #ffc107;
-            --purple: #8a2be2;
-        }
+<!-- Firebase SDK (Version 8 Compatible - Sama seperti absen Abang) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-        * {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{--navy:#0b1926;--card-bg:#102a43;--blue:#1677ff;--light:#183b56;--line:#1e3a5f;--text:#e2e8f0}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#060f18,#0b1926 55%,#0f2942);color:var(--text);min-height:100vh;padding:24px}
+.wrap{max-width:1000px;margin:auto}
+header{background:linear-gradient(120deg,#0a1b2d,#1a6fc4);color:#fff;padding:32px 28px;border-radius:18px 18px 0 0;box-shadow:0 4px 20px rgba(0,0,0,0.3);text-align:center}
+header h1{margin:0 0 8px;font-size:clamp(24px,4vw,34px);letter-spacing:.5px}
+header p{margin:0;color:#dbeafe;line-height:1.5}
+form,.records{background:var(--card-bg);padding:26px;border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,0.4)}
+.section-title{font-size:16px;font-weight:700;color:#fff;margin:4px 0 18px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.field.full{grid-column:1/-1}
+label{font-size:13px;font-weight:700;color:#9fb3c8}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:12px;font:inherit;background:#0b1926;color:#fff}
+input:focus,select:focus,textarea:focus{outline:2px solid #bfdbfe;border-color:var(--blue)}
+textarea{min-height:82px;resize:vertical}
+.hint{font-size:12px;color:#94a3b8;line-height:1.45}
+.location-row,.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{border:0;border-radius:9px;padding:12px 16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.primary{background:var(--blue);color:#fff}.secondary{background:#183b56;color:#fff;border:1px solid var(--line)}.danger{background:#7f1d1d;color:#fecaca}.success{background:#10b981;color:#fff}
+.photos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.photo-card{border:1px dashed var(--line);border-radius:12px;padding:14px;background:#0b1926}
+.photo-card label{display:block;margin-bottom:10px}
+.preview{width:100%;height:145px;object-fit:contain;background:#183b56;border-radius:8px;margin-top:10px;display:none}
+.actions{margin-top:24px}
+.records{border-top:0;border-radius:0 0 18px 18px}
+.record{padding:14px;border:1px solid var(--line);border-radius:10px;margin-top:10px;display:flex;justify-content:space-between;gap:12px;align-items:center;background:#0b1926}
+.record strong{display:block;margin-bottom:5px;color:#fff}.record small{color:#9fb3c8}
 
-        /* LATAR BELAKANG ANIMASI RGB SANGAT CLEAR & MENYALA */
-        body {
-            background: linear-gradient(-45deg, #ff0055, #7928ca, #0070f3, #00dfd8, #00ff87, #ff0055);
-            background-size: 400% 400%;
-            animation: vibrantRGB 8s ease infinite;
-            color: var(--text-light);
-            padding: 15px;
-            min-height: 100vh;
-        }
+/* Modal / Popup Style */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(5,11,18,0.85);display:none;justify-content:center;align-items:center;z-index:9999;padding:16px}
+.modal-content{background:#102a43;color:#fff;width:100%;max-width:750px;border-radius:16px;padding:24px;box-shadow:0 20px 40px rgba(0,0,0,0.6);max-height:90vh;overflow-y:auto;position:relative;border:1px solid var(--line)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px}
+.modal-header h3{margin:0;font-size:18px;display:flex;align-items:center;gap:8px}
+.close-modal{background:transparent;color:#fff;font-size:20px;cursor:pointer;padding:4px 8px;border:0}
+.modal-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px}
+.modal-item label{font-size:11px;color:#9fb3c8;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px}
+.modal-item div{font-size:14px;color:#fff;font-weight:600}
+.modal-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px}
+.modal-photo-box{background:#0b1926;border-radius:10px;padding:10px;text-align:center;border:1px solid var(--line)}
+.modal-photo-box span{font-size:12px;color:#9fb3c8;display:block;margin-bottom:8px}
+.modal-photo-box img{width:100%;height:110px;object-fit:cover;border-radius:6px;background:#183b56}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;border-top:1px solid var(--line);padding-top:16px;flex-wrap:wrap}
 
-        @keyframes vibrantRGB {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .container {
-            max-width: 1050px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-            background: var(--bg-card);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            color: var(--white);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-        }
-
-        header h1 {
-            font-size: 24px;
-            letter-spacing: 1px;
-            color: #38bdf8;
-            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
-        }
-
-        header p {
-            font-size: 13px;
-            opacity: 0.9;
-            margin-top: 5px;
-            color: #94a3b8;
-        }
-
-        .card {
-            background: var(--bg-card);
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
-            margin-bottom: 20px;
-            backdrop-filter: blur(10px);
-        }
-
-        .clock-box {
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: var(--warning);
-            background: #061121;
-            border: 1px solid #1e3a8a;
-            padding: 10px;
-            border-radius: 8px;
-            text-shadow: 0 0 8px rgba(255, 193, 7, 0.4);
-        }
-
-        .rules-info {
-            background: rgba(255, 193, 7, 0.15);
-            color: #ffe082;
-            padding: 12px 15px;
-            border-radius: 6px;
-            font-size: 13px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--warning);
-            line-height: 1.5;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            font-size: 14px;
-            color: var(--text-light);
-        }
-
-        input, select, button {
-            width: 100%;
-            padding: 10px;
-            background-color: #061121;
-            border: 1px solid var(--border-color);
-            color: #ffffff;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-        }
-
-        input:focus, select:focus {
-            border-color: #38bdf8;
-            box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
-        }
-
-        .row {
-            display: flex;
-            gap: 15px;
-        }
-
-        .col {
-            flex: 1;
-        }
-
-        .manual-box {
-            display: none;
-            background: #061121;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px dashed var(--primary);
-            margin-bottom: 15px;
-        }
-
-        button.btn-submit {
-            background-color: var(--primary);
-            color: var(--white);
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 10px;
-            padding: 12px;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
-        }
-
-        button.btn-submit:hover {
-            background-color: var(--secondary);
-            transform: translateY(-2px);
-        }
-
-        button.btn-export {
-            background-color: var(--success);
-            color: var(--white);
-            border: none;
-            padding: 8px 15px;
-            width: auto;
-            cursor: pointer;
-            border-radius: 6px;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);
-        }
-
-        button.btn-export:hover {
-            background-color: #218838;
-        }
-
-        .btn-delete {
-            background-color: var(--danger);
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 11px;
-        }
-
-        .btn-delete:hover {
-            background-color: #bd2130;
-        }
-
-        .table-scroll-container {
-            max-height: 420px;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            margin-top: 15px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--table-row);
-        }
-
-        table, th, td {
-            border: 1px solid var(--border-color);
-        }
-
-        th, td {
-            padding: 10px;
-            text-align: center;
-            vertical-align: middle;
-            font-size: 12px;
-            color: var(--text-light);
-        }
-
-        th {
-            background-color: var(--table-header);
-            color: var(--white);
-            font-weight: bold;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        tbody tr:nth-child(even) {
-            background-color: var(--table-row-alt);
-        }
-
-        .badge-masuk {
-            background-color: var(--success);
-            color: #ffffff;
-            padding: 4px 8px;
-            border-radius: 3px;
-            font-weight: bold;
-            display: inline-block;
-        }
-
-        .badge-pulang {
-            background-color: var(--purple);
-            color: #ffffff;
-            padding: 4px 8px;
-            border-radius: 3px;
-            font-weight: bold;
-            display: inline-block;
-        }
-
-        .badge-denda {
-            color: #ff6b6b;
-            font-weight: bold;
-        }
-
-        .preview-img {
-            width: 36px;
-            height: 36px;
-            border-radius: 3px;
-            object-fit: cover;
-            display: block;
-            margin: 0 auto;
-            border: 1px solid var(--border-color);
-        }
-
-        .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .table-header h3 {
-            font-weight: 800;
-            font-size: 18px;
-            color: var(--warning);
-        }
-
-        .gps-status {
-            font-size: 12px;
-            margin-top: 5px;
-            font-weight: bold;
-        }
-        .gps-in { color: #00ff87; }
-        .gps-out { color: #ff6b6b; }
-        
-        a {
-            color: #38bdf8;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+footer{text-align:center;color:#94a3b8;font-size:12px;margin:18px 0}
+@media(max-width:650px){body{padding:12px}.grid{grid-template-columns:1fr}form,.records{padding:18px}.photos{grid-template-columns:1fr}.photo-card{display:grid;grid-template-columns:1fr}.preview{height:180px}.record{align-items:flex-start;flex-direction:column}.modal-grid{grid-template-columns:1fr}.modal-photos{grid-template-columns:1fr}}
+@media print{body{background:#fff;color:#000;padding:0}header{border-radius:0}form,.records{box-shadow:none;background:#fff;color:#000}.actions,button,.records,.modal-overlay{display:none!important}}
+</style>
 </head>
 <body>
+<div class="wrap">
+<header>
+  <h1>DATA PELANGGAN NSNET</h1>
+  <p>Formulir pendataan pelanggan — isi data dengan benar, lalu simpan data anda</p>
+</header>
+<form id="customerForm">
+  <input type="hidden" id="editKey" value="">
+  <div class="section-title">Identitas Pelanggan</div>
+  <div class="grid">
+    <div class="field"><label for="nik">NIK</label><input id="nik" name="nik" inputmode="numeric" maxlength="16" placeholder="Masukkan 16 digit NIK" required><span class="hint">Data identitas bersifat pribadi. Simpan file di perangkat yang aman.</span></div>
+    <div class="field"><label for="nama">Nama Pelanggan</label><input id="nama" name="nama" placeholder="Nama lengkap sesuai KTP" required></div>
+    <div class="field"><label for="jk">Jenis Kelamin</label><select id="jk" name="jenis_kelamin" required><option value="">-- Pilih jenis kelamin --</option><option>Laki-laki</option><option>Perempuan</option></select></div>
+    <div class="field"><label for="pekerjaan">Pekerjaan</label><input id="pekerjaan" name="pekerjaan" placeholder="Contoh: Wiraswasta"></div>
+    <div class="field full"><label for="alamat">Alamat</label><textarea id="alamat" name="alamat" placeholder="Jalan, dusun/kelurahan, kecamatan, kabupaten" required></textarea></div>
+    <div class="field"><label for="hp">Nomor Handphone / WhatsApp</label><input id="hp" name="nomor_handphone" type="tel" placeholder="Contoh: 08xxxxxxxxxx" required></div>
+    <div class="field"><label for="tanggal">Tanggal Pendataan</label><input id="tanggal" name="tanggal_pendataan" type="date"></div>
+    <div class="field full"><label>Titik Lokasi Rumah Pelanggan</label>
+      <div class="location-row"><input id="lokasi" name="titik_lokasi" placeholder="Koordinat GPS atau tautan Google Maps"><button type="button" class="secondary" id="getLocation">Ambil Lokasi GPS Rumah Anda </button></div>
+      <span class="hint">Izinkan akses lokasi pada browser</span>
+    </div>
+  </div>
+  <div class="section-title" style="margin-top:28px">Dokumentasi Pelanggan</div>
+  <div class="photos">
+    <div class="photo-card">
+      <label for="ktp">FOTO KTP</label>
+      <input id="ktp" type="file" accept="image/*" data-photo="foto_ktp">
+      <img class="preview" id="prev-ktp" alt="Pratinjau foto KTP">
+      <div style="margin-top:8px;">
+        <button type="button" class="secondary" id="dl-btn-ktp" style="display:none;width:100%;font-size:12px;padding:8px;justify-content:center;" onclick="downloadSinglePhoto('foto_ktp', 'ktp')">📥 Unduh Foto KTP</button>
+      </div>
+      <span class="hint" style="margin-top:6px;">Pastikan foto jelas jangan sampai blur</span>
+    </div>
+    <div class="photo-card">
+      <label for="rumah">FOTO RUMAH</label>
+      <input id="rumah" type="file" accept="image/*" data-photo="foto_rumah">
+      <img class="preview" id="prev-rumah" alt="Pratinjau foto rumah">
+      <div style="margin-top:8px;">
+        <button type="button" class="secondary" id="dl-btn-rumah" style="display:none;width:100%;font-size:12px;padding:8px;justify-content:center;" onclick="downloadSinglePhoto('foto_rumah', 'rumah')">📥 Unduh Foto Rumah</button>
+      </div>
+      <span class="hint" style="margin-top:6px;">Pastikan foto jelas jangan sampai blur</span>
+    </div>
+    <div class="photo-card">
+      <label for="alat">FOTO ALAT WIFI</label>
+      <input id="alat" type="file" accept="image/*" data-photo="foto_alat_wifi">
+      <img class="preview" id="prev-alat" alt="Pratinjau alat WiFi">
+      <div style="margin-top:8px;">
+        <button type="button" class="secondary" id="dl-btn-alat" style="display:none;width:100%;font-size:12px;padding:8px;justify-content:center;" onclick="downloadSinglePhoto('foto_alat_wifi', 'alat')">📥 Unduh Foto Alat WiFi</button>
+      </div>
+      <span class="hint" style="margin-top:6px;">Pastikan foto jelas jangan sampai blur</span>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="primary" type="submit" id="submitBtn">SIMPAN DATA</button>
+    <button class="secondary" type="button" id="download">Ekspor JSON</button>
+    <button class="secondary" type="button" id="importJsonBtn">Impor JSON</button>
+    <button class="secondary" type="button" id="exportCsv">Ekspor CSV</button>
+	<input type="file" id="importJsonFile" accept=".json" style="display:none">
+    <button class="secondary" type="button" onclick="window.print()">Cetak Formulir</button>
+  </div>
+  <p class="hint">Data yang disimpan tersimpan di perangkat ini dan terkirim otomatis ke Realtime Database Firebase</p>
+</form>
+<section class="records">
+  <div class="section-title">Data Tersimpan Secara Online (Realtime Database)</div>
+  <div id="recordList"><span class="hint">Memuat data dari server Firebase...</span></div>
+  <div class="actions"><button type="button" class="danger" id="clearAll">Hapus Semua Data Online</button></div>
+</section>
+<footer>Formulir Data Pelanggan WiFi • Simpan data pribadi dengan aman dan batasi akses hanya kepada petugas berwenang.</footer>
+</div>
 
-<div class="container">
-    <header>
-        <h1>ABSENSI KARYAWAN NSNET</h1>
-        <p>Sistem absensi karyawan dan perhitungan denda keterlambatan kerja </p>
-        <p>INGAT... Hindari keterlambatan anda demi menjaga keutuhan gaji anda</p>
-    </header>
-
-    <div class="card">
-        <div class="clock-box" id="liveClock">--:--:-- WIB</div>
-
-        <div class="rules-info">
-            ⚠️ <b>Ketentuan Absensi :</b><br>
-            • Setiap karyawan <b>Hanya bisa 1x absen masuk dan 1x absen pulang</b> dalam sehari.<br>
-            • Jam Masuk Kerja : <b>09 : 00 : 00 WIB</b>.<br>
-            • Absensi <b>WAJIB</b> dilakukan di lokasi kerja.<br>
-            • Keterlambatan masuk kerja dikenakan potongan gaji sebesar <b>Rp 10.000/menit</b> (Maksimal 50% dari gaji pokok harian).
-        </div>
-
-        <form id="attendanceForm">
-            <div class="form-group">
-                <label for="karyawan">Pilih Karyawan</label>
-                <select id="karyawan" onchange="updateDataKaryawan()" required>
-                    <option value="">-- Pilih Nama Karyawan --</option>
-                    <optgroup label="Karyawan Tetap">
-                        <option value="RYAN USMAN" data-jabatan="Team Leader (Pemimpin Tim)" data-gaji="200000">RYAN USMAN</option>
-                        <option value="TOMI PAKAYA" data-jabatan="ANGGOTA" data-gaji="150000">TOMI PAKAYA</option>
-                        <option value="KASIM BAGI" data-jabatan="ANGGOTA" data-gaji="150000">KASIM BAGI</option>
-                        <option value="YAZID MUSTAPA" data-jabatan="ANGGOTA" data-gaji="150000">YAZID MUSTAPA</option>
-                    </optgroup>
-                    <optgroup label="Karyawan Pembantu / Lepas">
-                        <option value="MANUAL">Input Karyawan Tambahan/Pembantu</option>
-                    </optgroup>
-                </select>
-            </div>
-
-            <!-- Form Khusus Karyawan Tambahan / Pembantu -->
-            <div id="manualBox" class="manual-box">
-                <div class="form-group">
-                    <label for="namaManual">Nama Karyawan Tambahan</label>
-                    <input type="text" id="namaManual" placeholder="Masukkan nama lengkap pembantu/helper">
-                </div>
-                <div class="row">
-                    <div class="col form-group">
-                        <label for="jabatanManual">Jabatan / Posisi</label>
-                        <select id="jabatanManual">
-                            <option value="Helper / Teknisi Pembantu">Helper / Teknisi Pembantu</option>
-                            <option value="Anggota Tambahan">Anggota Tambahan</option>
-                        </select>
-                    </div>
-                    <div class="col form-group">
-                        <label for="gajiManual">Gaji Pokok / Hari (Rp)</label>
-                        <input type="number" id="gajiManual" placeholder="Contoh: 100000 s/d 200000" min="50000" max="500000" step="10000">
-                    </div>
-                </div>
-            </div>
-
-            <div class="row" id="autoBox">
-                <div class="col form-group">
-                    <label for="jabatan">Jabatan</label>
-                    <input type="text" id="jabatan" placeholder="Terisi otomatis" readonly>
-                </div>
-                <div class="col form-group">
-                    <label for="gajiPokok">Gaji Pokok / Hari</label>
-                    <input type="text" id="gajiPokok" placeholder="Terisi otomatis" readonly>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col form-group">
-                    <label for="tipe">Tipe Absen</label>
-                    <select id="tipe" required>
-                        <option value="MASUK">Absen Masuk</option>
-                        <option value="PULANG">Absen Pulang</option>
-                    </select>
-                </div>
-                <div class="col form-group">
-                    <label for="foto">Foto Selfie / Bukti</label>
-                    <input type="file" id="foto" accept="image/*" capture="user" required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Koordinat Lokasi GPS Karyawan</label>
-                <input type="text" id="lokasi" placeholder="Mengambil lokasi GPS..." readonly required>
-                <div id="gpsStatus" class="gps-status">Mengecek posisi...</div>
-            </div>
-
-            <button type="submit" id="btnSubmit" class="btn-submit">SIMPAN ABSENSI ONLINE</button>
-        </form>
+<!-- Modal Pratinjau Detail Pelanggan -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-content" id="modalCardContent">
+    <div class="modal-header">
+      <h3 id="modalTitle">📁 Detail Pelanggan</h3>
+      <button class="close-modal" id="closeModal">×</button>
+    </div>
+    <div class="modal-grid">
+      <div class="modal-item"><label>NIK</label><div id="m-nik">-</div></div>
+      <div class="modal-item"><label>Nama Pelanggan</label><div id="m-nama">-</div></div>
+      <div class="modal-item"><label>Jenis Kelamin</label><div id="m-jk">-</div></div>
+      <div class="modal-item"><label>Pekerjaan</label><div id="m-pekerjaan">-</div></div>
+      <div class="modal-item"><label>Nomor HP / WhatsApp</label><div id="m-hp" style="color:#60a5fa">-</div></div>
+      <div class="modal-item"><label>Tanggal Pendataan</label><div id="m-tanggal">-</div></div>
+      <div class="modal-item full" style="grid-column:1/-1"><label>Titik Koordinat / Maps</label><div id="m-lokasi">-</div></div>
+      <div class="modal-item full" style="grid-column:1/-1"><label>Alamat Lengkap</label><div id="m-alamat">-</div></div>
+    </div>
+    
+    <div style="font-size:13px;font-weight:700;color:#9fb3c8;margin-bottom:8px;text-transform:uppercase;">Dokumen Lampiran Foto</div>
+    <div class="modal-photos">
+      <div class="modal-photo-box">
+        <span>Foto KTP</span>
+        <img id="m-foto-ktp" src="" alt="Belum ada foto" style="display:none">
+        <div id="m-foto-ktp-empty" style="font-size:11px;color:#94a3b8;padding:30px 0;">Tidak ada foto</div>
+        <button type="button" class="secondary" id="m-dl-ktp" style="display:none;width:100%;font-size:11px;padding:6px;margin-top:8px;justify-content:center;">📥 Unduh</button>
+      </div>
+      <div class="modal-photo-box">
+        <span>Foto Rumah</span>
+        <img id="m-foto-rumah" src="" alt="Belum ada foto" style="display:none">
+        <div id="m-foto-rumah-empty" style="font-size:11px;color:#94a3b8;padding:30px 0;">Tidak ada foto</div>
+        <button type="button" class="secondary" id="m-dl-rumah" style="display:none;width:100%;font-size:11px;padding:6px;margin-top:8px;justify-content:center;">📥 Unduh</button>
+      </div>
+      <div class="modal-photo-box">
+        <span>Foto Alat WiFi</span>
+        <img id="m-foto-alat" src="" alt="Belum ada foto" style="display:none">
+        <div id="m-foto-alat-empty" style="font-size:11px;color:#94a3b8;padding:30px 0;">Tidak ada foto</div>
+        <button type="button" class="secondary" id="m-dl-alat" style="display:none;width:100%;font-size:11px;padding:6px;margin-top:8px;justify-content:center;">📥 Unduh</button>
+      </div>
     </div>
 
-    <div class="card">
-        <div class="table-header">
-            <h3>Rekap Absensi Dan Gaji Harian Karyawan </h3>
-            <button class="btn-export" onclick="exportToCSV()">Export CSV</button>
-        </div>
-        
-        <div class="table-scroll-container">
-            <table id="rekapTable">
-                <thead>
-                    <tr>
-                        <th>Tanggal Jam</th>
-                        <th>Nama Lengkap</th>
-                        <th>Jabatan</th>
-                        <th>Status</th>
-                        <th>Terlambat</th>
-                        <th>Gaji Pokok</th>
-                        <th>Denda</th>
-                        <th>Gaji Bersih</th>
-                        <th>Foto</th>
-                        <th>GPS</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr><td colspan="11" style="text-align:center;">Memuat data dari server Firebase...</td></tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="modal-actions">
+      <button type="button" class="secondary" id="m-closeBtn" style="background:#1e3a5f;">Tutup</button>
     </div>
+  </div>
 </div>
 
 <script>
-    // Konfigurasi Database Online Firebase
+    // Konfigurasi Database Online Firebase (Realtime Database)
     const firebaseConfig = {
-        databaseURL: "https://nsnet-absensi-default-rtdb.firebaseio.com"
+      databaseURL: "https://nsnet-data-pelanggan-default-rtdb.firebaseio.com"
     };
 
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
+    let currentPelangganData = [];
 
-    let currentAbsenData = [];
-    let userLat = null;
-    let userLon = null;
+    const form = document.getElementById('customerForm');
+    let photoCache = {};
 
-    const KANTOR_LAT = 0.520538; 
-    const KANTOR_LON = 121.952507;
-    const RADIUS_MAKSIMAL_METER = 20;
-
-    function updateClock() {
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('id-ID') + ' WIB';
-        const dateString = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        document.getElementById('liveClock').innerHTML = `${dateString} | ${timeString}`;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    function updateDataKaryawan() {
-        const select = document.getElementById('karyawan');
-        const selectedOption = select.options[select.selectedIndex];
-        const manualBox = document.getElementById('manualBox');
-        const autoBox = document.getElementById('autoBox');
-
-        const namaManual = document.getElementById('namaManual');
-        const gajiManual = document.getElementById('gajiManual');
-
-        if (select.value === "MANUAL") {
-            manualBox.style.display = "block";
-            autoBox.style.display = "none";
-            
-            namaManual.required = true;
-            gajiManual.required = true;
-
-            document.getElementById('jabatan').value = "";
-            document.getElementById('gajiPokok').value = "";
-        } else if (select.value !== "") {
-            manualBox.style.display = "none";
-            autoBox.style.display = "flex";
-
-            namaManual.required = false;
-            gajiManual.required = false;
-
-            const jabatan = selectedOption.getAttribute('data-jabatan');
-            const gaji = parseInt(selectedOption.getAttribute('data-gaji'));
-            
-            document.getElementById('jabatan').value = jabatan;
-            document.getElementById('gajiPokok').value = "Rp " + gaji.toLocaleString('id-ID');
-        } else {
-            manualBox.style.display = "none";
-            autoBox.style.display = "flex";
-
-            namaManual.required = false;
-            gajiManual.required = false;
-
-            document.getElementById('jabatan').value = "";
-            document.getElementById('gajiPokok').value = "";
-        }
-    }
-
-    function hitungJarakMeter(lat1, lon1, lat2, lon2) {
-        const R = 6371e3;
-        const radLat1 = lat1 * Math.PI / 180;
-        const radLat2 = lat2 * Math.PI / 180;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                  Math.cos(radLat1) * Math.cos(radLat2) *
-                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        return Math.round(R * c);
-    }
-
-    function getLocation() {
-        const statusDiv = document.getElementById('gpsStatus');
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    userLat = position.coords.latitude;
-                    userLon = position.coords.longitude;
-                    document.getElementById('lokasi').value = `${userLat.toFixed(6)}, ${userLon.toFixed(6)}`;
-
-                    const jarak = hitungJarakMeter(userLat, userLon, KANTOR_LAT, KANTOR_LON);
-                    
-                    if (jarak <= RADIUS_MAKSIMAL_METER) {
-                        statusDiv.className = "gps-status gps-in";
-                        statusDiv.innerText = `✅ LOKASI VALID: Di Area Kantor (Jarak: ${jarak} meter dari kantor)`;
-                    } else {
-                        statusDiv.className = "gps-status gps-out";
-                        statusDiv.innerText = `❌ LOKASI DITOLAK: Di luar lokasi kantor (Jarak: ${jarak} meter dari kantor). Maksimal 20m!`;
-                    }
-                },
-                (error) => {
-                    document.getElementById('lokasi').value = "GPS Tidak Aktif";
-                    statusDiv.className = "gps-status gps-out";
-                    statusDiv.innerText = "⚠️ Aktifkan GPS / Izin Lokasi di HP/PC Anda!";
-                },
-                { enableHighAccuracy: true }
-            );
-        } else {
-            document.getElementById('lokasi').value = "Browser Tidak Mendukung GPS";
-            statusDiv.innerText = "Browser tidak mendukung Geolocation.";
-        }
-    }
-    window.onload = getLocation;
-
-    function compressImage(file, callback) {
+    const photoInputs=[...document.querySelectorAll('input[type="file"][data-photo]')];
+    photoInputs.forEach(input=>input.addEventListener('change',()=>{
+      const img=document.getElementById('prev-'+input.id);
+      const dlBtn=document.getElementById('dl-btn-'+input.id);
+      const file=input.files && input.files[0];
+      if(file){
         const reader = new FileReader();
-        reader.onload = function(event) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                const max_size = 400;
-
-                if (width > height) {
-                    if (width > max_size) {
-                        height *= max_size / width;
-                        width = max_size;
-                    }
-                } else {
-                    if (height > max_size) {
-                        width *= max_size / height;
-                        height = max_size;
-                    }
-                }
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                callback(canvas.toDataURL('image/jpeg', 0.6));
-            };
-            img.src = event.target.result;
+        reader.onload = function(e) {
+          img.src = e.target.result;
+          img.style.display = 'block';
+          if(dlBtn) dlBtn.style.display = 'inline-flex';
+          photoCache[input.dataset.photo] = e.target.result;
         };
         reader.readAsDataURL(file);
+      }else{
+        img.removeAttribute('src');
+        img.style.display='none';
+        if(dlBtn) dlBtn.style.display='none';
+      }
+    }));
+
+    function downloadSinglePhoto(photoKey, typeName){
+      const url = photoCache[photoKey];
+      if(!url){alert('Tidak ada foto untuk diunduh.');return;}
+      const a = document.createElement('a');
+      a.href = url;
+      const nikVal = document.getElementById('nik').value.trim() || 'pelanggan';
+      a.download = `foto-${typeName}-${nikVal}.jpg`;
+      a.click();
     }
 
-    const form = document.getElementById('attendanceForm');
-    const btnSubmit = document.getElementById('btnSubmit');
-
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        if (userLat === null || userLon === null) {
-            alert("⚠️ LOKASI GPS BELUM TERDETEKSI!\n\nMohon aktifkan lokasi/GPS di HP/Komputer Anda dan izinkan browser mengakses lokasi.");
-            return;
-        }
-
-        const jarakKeKantor = hitungJarakMeter(userLat, userLon, KANTOR_LAT, KANTOR_LON);
-        if (jarakKeKantor > RADIUS_MAKSIMAL_METER) {
-            alert(`⚠️ ABSENSI DITOLAK!\n\nAnda terdeteksi berada di luar lokasi kantor!\n• Jarak Anda saat ini: ${jarakKeKantor} Meter\n• Maksimal Batas Absen: ${RADIUS_MAKSIMAL_METER} Meter\n\nSilakan absen saat sudah berada di lokasi/kantor kerja.`);
-            return;
-        }
-
-        const select = document.getElementById('karyawan');
-        let nama = "";
-        let jabatan = "";
-        let gajiPokok = 0;
-
-        if (select.value === "MANUAL") {
-            nama = document.getElementById('namaManual').value.trim();
-            jabatan = document.getElementById('jabatanManual').value;
-            gajiPokok = parseInt(document.getElementById('gajiManual').value) || 0;
-        } else {
-            const selectedOption = select.options[select.selectedIndex];
-            nama = selectedOption.value;
-            jabatan = document.getElementById('jabatan').value;
-            gajiPokok = parseInt(selectedOption.getAttribute('data-gaji')) || 0;
-        }
-
-        const tipe = document.getElementById('tipe').value;
-        const lokasi = document.getElementById('lokasi').value;
-        const fotoInput = document.getElementById('foto').files[0];
-
-        const now = new Date();
-        const dd = String(now.getDate()).padStart(2, '0');
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const yyyy = now.getFullYear();
-        const tanggal = `${dd}/${mm}/${yyyy}`;
-
-        const hh = String(now.getHours()).padStart(2, '0');
-        const min = String(now.getMinutes()).padStart(2, '0');
-        const ss = String(now.getSeconds()).padStart(2, '0');
-        const jamFormat = `${hh}.${min}.${ss}`;
-
-        const namaNormalized = nama.toLowerCase().trim();
-        const sudahAbsenHariIni = currentAbsenData.some(item => 
-            item.nama.toLowerCase().trim() === namaNormalized &&
-            item.tanggal === tanggal &&
-            item.tipe === tipe
-        );
-
-        if (sudahAbsenHariIni) {
-            alert(`⚠️ PERINGATAN:\n\n${nama} SUDAH MELAKUKAN ABSEN ${tipe} HARI INI (${tanggal}).\n\nSatu karyawan hanya bisa 1x melakukan Absen ${tipe} per hari!`);
-            return;
-        }
-
-        btnSubmit.disabled = true;
-        btnSubmit.innerText = "MENGIRIM DATA ONLINE...";
-
-        let menitTerlambat = 0;
-        let denda = 0;
-        let gajiBersih = gajiPokok;
-
-        if (tipe === "MASUK") {
-            const jamTarget = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0);
-
-            if (now > jamTarget) {
-                const selisihMs = now - jamTarget;
-                menitTerlambat = Math.ceil(selisihMs / (1000 * 60));
-                const dendaAwal = menitTerlambat * 10000;
-                const dendaMaksimal = gajiPokok * 0.5;
-                
-                denda = Math.min(dendaAwal, dendaMaksimal);
-                gajiBersih = gajiPokok - denda;
-            }
-        } else if (tipe === "PULANG") {
-            const dataMasukHariIni = currentAbsenData.find(item => 
-                item.nama.toLowerCase().trim() === namaNormalized &&
-                item.tanggal === tanggal &&
-                item.tipe === "MASUK"
-            );
-
-            if (dataMasukHariIni) {
-                menitTerlambat = dataMasukHariIni.menitTerlambat || 0;
-                denda = dataMasukHariIni.denda || 0;
-                gajiBersih = dataMasukHariIni.gajiBersih !== undefined ? dataMasukHariIni.gajiBersih : gajiPokok;
-            }
-        }
-
-        if (fotoInput) {
-            compressImage(fotoInput, function(fotoBase64) {
-                const dataAbsen = {
-                    jam: jamFormat,
-                    tanggal: tanggal,
-                    nama: nama,
-                    jabatan: jabatan,
-                    tipe: tipe,
-                    gajiPokok: gajiPokok,
-                    menitTerlambat: menitTerlambat,
-                    denda: denda,
-                    gajiBersih: gajiBersih,
-                    foto: fotoBase64,
-                    lokasi: lokasi,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                };
-
-                database.ref('absensi_nsnet').push(dataAbsen, (error) => {
-                    btnSubmit.disabled = false;
-                    btnSubmit.innerText = "SIMPAN ABSENSI ONLINE";
-
-                    if (error) {
-                        alert("Gagal menyimpan data ke server online: " + error.message);
-                    } else {
-                        alert(`Absen Berhasil Disimpan ONLINE!\n\nNama: ${nama}\nJam: ${jamFormat}\nTanggal: ${tanggal}\nTipe: ${tipe}\nGaji Pokok: Rp ${gajiPokok.toLocaleString('id-ID')}\nTerlambat: ${menitTerlambat} Mnt\nDenda: Rp ${denda.toLocaleString('id-ID')}\nGaji Bersih Diterima: Rp ${gajiBersih.toLocaleString('id-ID')}`);
-
-                        form.reset();
-                        updateDataKaryawan();
-                        getLocation();
-                    }
-                });
-            });
-        }
+    document.getElementById('getLocation').addEventListener('click',()=>{
+      const field=document.getElementById('lokasi');
+      if(!navigator.geolocation){alert('Browser ini tidak mendukung GPS. Silakan masukkan lokasi secara manual.');return;}
+      field.value='Mengambil lokasi...';
+      navigator.geolocation.getCurrentPosition(pos=>{
+        field.value=pos.coords.latitude.toFixed(6)+', '+pos.coords.longitude.toFixed(6);
+      },err=>{field.value='';alert('Lokasi tidak dapat diambil. Periksa izin lokasi browser atau isi secara manual.');},{enableHighAccuracy:true,timeout:12000});
     });
 
-    database.ref('absensi_nsnet').on('value', (snapshot) => {
-        const tableBody = document.getElementById('tableBody');
-        tableBody.innerHTML = "";
-        const data = snapshot.val();
+    // Realtime Listener dari Firebase Database
+    database.ref('pelanggan_wifi').on('value', (snapshot) => {
+      const list = document.getElementById('recordList');
+      list.innerHTML = '';
+      const data = snapshot.val();
 
-        if (!data) {
-            currentAbsenData = [];
-            tableBody.innerHTML = '<tr><td colspan="11" style="text-align:center;">Belum ada data absensi tersimpan di server.</td></tr>';
-            return;
-        }
+      if (!data) {
+        currentPelangganData = [];
+        list.innerHTML = '<span class="hint">Belum ada data pelanggan tersimpan di server.</span>';
+        return;
+      }
 
-        const keys = Object.keys(data);
-        currentAbsenData = keys.map(key => ({
-            id: key,
-            ...data[key]
-        }));
+      const keys = Object.keys(data);
+      currentPelangganData = keys.map(key => ({
+        id: key,
+        ...data[key]
+      }));
 
-        currentAbsenData.sort((a, b) => b.timestamp - a.timestamp);
+      // Urutkan dari yang terbaru
+      currentPelangganData.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-        currentAbsenData.forEach(item => {
-            const row = document.createElement('tr');
-            const badgeClass = item.tipe === 'MASUK' ? 'badge-masuk' : 'badge-pulang';
-            const nominalGajiPokok = item.gajiPokok ? parseInt(item.gajiPokok) : 0;
+      currentPelangganData.forEach((r) => {
+        const div = document.createElement('div');
+        div.className = 'record';
+        const info = document.createElement('div');
+        const strong = document.createElement('strong');
+        strong.textContent = r.nama || '(Tanpa nama)';
+        const small = document.createElement('small');
+        small.textContent = 'NIK: ' + (r.nik || '-') + ' • HP: ' + (r.nomor_handphone || '-') + ' • ' + (r.tanggal_pendataan || 'Tanggal tidak diisi');
+        info.append(strong, small);
+        
+        const actions = document.createElement('div');
+        actions.style.display = 'flex';
+        actions.style.gap = '6px';
 
-            row.innerHTML = `
-                <td><b>${item.tanggal}</b><br><small>${item.jam}</small></td>
-                <td><b>${item.nama}</b></td>
-                <td><b>${item.jabatan}</b></td>
-                <td><span class="${badgeClass}">${item.tipe}</span></td>
-                <td>${item.menitTerlambat > 0 ? `<span class="badge-denda">${item.menitTerlambat} Mnt</span>` : '-'}</td>
-                <td><b>Rp ${nominalGajiPokok.toLocaleString('id-ID')}</b></td>
-                <td>${item.denda > 0 ? `<span class="badge-denda">Rp ${item.denda.toLocaleString('id-ID')}</span>` : '-'}</td>
-                <td><b>Rp ${item.gajiBersih.toLocaleString('id-ID')}</b></td>
-                <td><img src="${item.foto}" class="preview-img"></td>
-                <td><a href="https://maps.google.com/?q=${item.lokasi}" target="_blank">Cek Map</a></td>
-                <td><button class="btn-delete" onclick="hapusAbsen('${item.id}', '${item.nama}')">Hapus</button></td>
-            `;
+        const view = document.createElement('button');
+        view.className = 'secondary';
+        view.innerHTML = '👁️ Lihat';
+        view.onclick = () => openDetailModal(r);
 
-            tableBody.appendChild(row);
-        });
+        const edit = document.createElement('button');
+        edit.className = 'secondary';
+        edit.innerHTML = '✏️ Edit';
+        edit.onclick = () => editRecord(r.id);
+
+        const del = document.createElement('button');
+        del.className = 'danger';
+        del.innerHTML = '🗑️ Hapus';
+        del.onclick = () => hapusPelanggan(r.id, r.nama);
+        
+        actions.append(view, edit, del);
+        div.append(info, actions);
+        list.append(div);
+      });
     });
 
-    function hapusAbsen(id, nama) {
-        const pinAdmin = "Terlambat";
-        
-        const inputPin = prompt(`MENGHAPUS ABSEN ${nama}\n\nMasukkan PIN Rahasia Admin:`);
-        
-        if (inputPin === null) return;
+    function openDetailModal(r){
+      document.getElementById('modalTitle').textContent = '📁 Detail Pelanggan: ' + (r.nama || '');
+      document.getElementById('m-nik').textContent = r.nik || '-';
+      document.getElementById('m-nama').textContent = r.nama || '-';
+      document.getElementById('m-jk').textContent = r.jenis_kelamin || '-';
+      document.getElementById('m-pekerjaan').textContent = r.pekerjaan || '-';
+      document.getElementById('m-hp').textContent = r.nomor_handphone || '-';
+      document.getElementById('m-tanggal').textContent = r.tanggal_pendataan || '-';
+      document.getElementById('m-lokasi').textContent = r.titik_lokasi || '-';
+      document.getElementById('m-alamat').textContent = r.alamat || '-';
 
-        if (inputPin === pinAdmin) {
-            if (confirm(`PIN Benar!\nYakin ingin menghapus data absen dari ${nama}?`)) {
-                database.ref('absensi_nsnet/' + id).remove()
-                    .then(() => {
-                        alert(`Data absen ${nama} berhasil dihapus!`);
-                    })
-                    .catch((error) => {
-                        alert("Gagal menghapus data: " + error.message);
-                    });
-            }
+      const ktpImg = document.getElementById('m-foto-ktp');
+      const ktpEmpty = document.getElementById('m-foto-ktp-empty');
+      const ktpDl = document.getElementById('m-dl-ktp');
+      if(r.foto_ktp){ 
+        ktpImg.src = r.foto_ktp; ktpImg.style.display='block'; ktpEmpty.style.display='none'; ktpDl.style.display='inline-flex';
+        ktpDl.onclick = () => { triggerDownload(r.foto_ktp, 'foto-ktp-' + (r.nik || 'wifi')); };
+      } else { 
+        ktpImg.style.display='none'; ktpEmpty.style.display='block'; ktpDl.style.display='none'; 
+      }
+
+      const rumahImg = document.getElementById('m-foto-rumah');
+      const rumahEmpty = document.getElementById('m-foto-rumah-empty');
+      const rumahDl = document.getElementById('m-dl-rumah');
+      if(r.foto_rumah){ 
+        rumahImg.src = r.foto_rumah; rumahImg.style.display='block'; rumahEmpty.style.display='none'; rumahDl.style.display='inline-flex';
+        rumahDl.onclick = () => { triggerDownload(r.foto_rumah, 'foto-rumah-' + (r.nik || 'wifi')); };
+      } else { 
+        rumahImg.style.display='none'; rumahEmpty.style.display='block'; rumahDl.style.display='none'; 
+      }
+
+      const alatImg = document.getElementById('m-foto-alat');
+      const alatEmpty = document.getElementById('m-foto-alat-empty');
+      const alatDl = document.getElementById('m-dl-alat');
+      if(r.foto_alat_wifi){ 
+        alatImg.src = r.foto_alat_wifi; alatImg.style.display='block'; alatEmpty.style.display='none'; alatDl.style.display='inline-flex';
+        alatDl.onclick = () => { triggerDownload(r.foto_alat_wifi, 'foto-alat-' + (r.nik || 'wifi')); };
+      } else { 
+        alatImg.style.display='none'; alatEmpty.style.display='block'; alatDl.style.display='none'; 
+      }
+
+      document.getElementById('detailModal').style.display = 'flex';
+    }
+
+    function triggerDownload(dataUrl, filename){
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = filename + '.jpg';
+      a.click();
+    }
+
+    function closeModalFunc(){
+      document.getElementById('detailModal').style.display = 'none';
+    }
+    document.getElementById('closeModal').onclick = closeModalFunc;
+    document.getElementById('m-closeBtn').onclick = closeModalFunc;
+    document.getElementById('detailModal').onclick = (e)=>{ if(e.target === document.getElementById('detailModal')) closeModalFunc(); };
+
+    function editRecord(id){
+      const r = currentPelangganData.find(item => item.id === id);
+      if(!r) return;
+      document.getElementById('editKey').value = r.id;
+      document.getElementById('nik').value = r.nik || '';
+      document.getElementById('nama').value = r.nama || '';
+      document.getElementById('jk').value = r.jenis_kelamin || '';
+      document.getElementById('pekerjaan').value = r.pekerjaan || '';
+      document.getElementById('alamat').value = r.alamat || '';
+      document.getElementById('hp').value = r.nomor_handphone || '';
+      document.getElementById('tanggal').value = r.tanggal_pendataan || '';
+      document.getElementById('lokasi').value = r.titik_lokasi || '';
+      
+      if(r.foto_ktp) { photoCache.foto_ktp = r.foto_ktp; const img=document.getElementById('prev-ktp'); img.src=r.foto_ktp; img.style.display='block'; const btn=document.getElementById('dl-btn-ktp'); if(btn) btn.style.display='inline-flex'; }
+      if(r.foto_rumah) { photoCache.foto_rumah = r.foto_rumah; const img=document.getElementById('prev-rumah'); img.src=r.foto_rumah; img.style.display='block'; const btn=document.getElementById('dl-btn-rumah'); if(btn) btn.style.display='inline-flex'; }
+      if(r.foto_alat_wifi) { photoCache.foto_alat_wifi = r.foto_alat_wifi; const img=document.getElementById('prev-alat'); img.src=r.foto_alat_wifi; img.style.display='block'; const btn=document.getElementById('dl-btn-alat'); if(btn) btn.style.display='inline-flex'; }
+
+      document.getElementById('submitBtn').textContent = 'Perbarui Data';
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    // Tombol Submit Utama: Simpan ke Firebase Realtime Database
+    form.addEventListener('submit', async e=>{
+      e.preventDefault();
+      const nik=document.getElementById('nik').value.trim();
+      if(!/^\d{16}$/.test(nik)){alert('NIK harus terdiri dari 16 digit angka.');return;}
+      
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.textContent = 'Menyimpan ke Cloud...';
+      submitBtn.disabled = true;
+
+      const data={};
+      new FormData(form).forEach((v,k)=>{if(typeof v==='string')data[k]=v.trim()});
+      data.dibuat_pada = new Date().toISOString();
+      data.timestamp = firebase.database.ServerValue.TIMESTAMP;
+      if(photoCache.foto_ktp) data.foto_ktp = photoCache.foto_ktp;
+      if(photoCache.foto_rumah) data.foto_rumah = photoCache.foto_rumah;
+      if(photoCache.foto_alat_wifi) data.foto_alat_wifi = photoCache.foto_alat_wifi;
+
+      const editKey = document.getElementById('editKey').value;
+
+      try {
+        if(editKey) {
+          // Update data yang sudah ada
+          await database.ref('pelanggan_wifi/' + editKey).update(data);
+          alert('Data pelanggan berhasil diperbarui!');
+          document.getElementById('editKey').value = '';
         } else {
-            alert("⚠️ PIN ADMIN SALAH!");
+          // Tambah data baru
+          await database.ref('pelanggan_wifi').push(data);
+          alert('Data pelanggan berhasil disimpan ke Realtime Database!');
         }
+        form.reset();
+        photoCache = {};
+      } catch(err) {
+        alert('Gagal menyimpan data: ' + err.message);
+      } finally {
+        submitBtn.textContent = 'SIMPAN DATA';
+        submitBtn.disabled = false;
+      }
+    });
+
+    function hapusPelanggan(id, nama){
+      if(confirm(`Yakin ingin menghapus data ${nama || 'ini'} dari server online?`)){
+        database.ref('pelanggan_wifi/' + id).remove()
+          .then(() => alert('Data berhasil dihapus!'))
+          .catch(err => alert('Gagal menghapus: ' + err.message));
+      }
     }
 
-    function exportToCSV() {
-        const pinAdmin = "Terlambat";
-        
-        const inputPin = prompt("EXPORT REKAP ABSENSI\n\nMasukkan PIN Rahasia Admin untuk mengunduh file:");
-        
-        if (inputPin === null) return;
+    document.getElementById('download').addEventListener('click',()=>{
+      if(!currentPelangganData.length){alert('Belum ada data tersimpan untuk diekspor.');return;}
+      const blob=new Blob([JSON.stringify(currentPelangganData,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=url;a.download='semua-data-pelanggan-wifi.json';a.click();URL.revokeObjectURL(url);
+    });
 
-        if (inputPin !== pinAdmin) {
-            alert("⚠️ PIN ADMIN SALAH!\n\nAkses download hanya diberikan kepada Admin.");
-            return;
-        }
+    document.getElementById('exportCsv').addEventListener('click',()=>{
+      if(!currentPelangganData.length){alert('Belum ada data tersimpan untuk diekspor ke CSV.');return;}
+      const keys = ['nik','nama','jenis_kelamin','pekerjaan','alamat','nomor_handphone','tanggal_pendataan','titik_lokasi','dibuat_pada'];
+      let csv = keys.join(',') + '\n';
+      currentPelangganData.forEach(r=>{
+        csv += keys.map(k => `"${(r[k]||'').replace(/"/g, '""')}"`).join(',') + '\n';
+      });
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const url=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=url;a.download='data-pelanggan-wifi.csv';a.click();URL.revokeObjectURL(url);
+    });
 
-        let table = document.getElementById("rekapTable");
-        let rows = table.querySelectorAll("tr");
-        let csv = [];
-
-        for (let i = 0; i < rows.length; i++) {
-            let row = [], cols = rows[i].querySelectorAll("td, th");
-            for (let j = 0; j < cols.length - 2; j++) {
-                let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, " ").replace(/,/g, ";");
-                row.push(data);
+    document.getElementById('importJsonBtn').addEventListener('click',()=>document.getElementById('importJsonFile').click());
+    document.getElementById('importJsonFile').addEventListener('change',(e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = async function(evt){
+        try{
+          const imported = JSON.parse(evt.target.result);
+          if(Array.isArray(imported)){
+            for(let item of imported) {
+              delete item.id;
+              await database.ref('pelanggan_wifi').push(item);
             }
-            csv.push(row.join(","));
+          } else if(typeof imported === 'object' && imported.nik){
+            delete imported.id;
+            await database.ref('pelanggan_wifi').push(imported);
+          }
+          alert('Data berhasil diimpor ke Realtime Database!');
+        } catch(err){
+          alert('Gagal membaca file JSON. Pastikan format file benar.');
         }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
 
-        if (csv.length <= 1) {
-            alert("Belum ada data absensi untuk di-export!");
-            return;
-        }
+    document.getElementById('clearAll').addEventListener('click',()=>{
+      if(confirm('Yakin ingin menghapus SEMUA data pelanggan di server online? Tindakan ini tidak dapat dibatalkan.')){
+        database.ref('pelanggan_wifi').remove()
+          .then(() => alert('Semua data berhasil dibersihkan!'))
+          .catch(err => alert('Gagal menghapus: ' + err.message));
+      }
+    });
 
-        let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
-        let downloadLink = document.createElement("a");
-        downloadLink.download = `Rekap_Absen_NSNET_Online_${new Date().toISOString().slice(0,10)}.csv`;
-        downloadLink.href = window.URL.createObjectURL(csvFile);
-        downloadLink.style.display = "none";
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-    }
+    form.addEventListener('reset',()=>{setTimeout(()=>{photoInputs.forEach(input=>{const img=document.getElementById('prev-'+input.id);img.removeAttribute('src');img.style.display='none';const dlBtn=document.getElementById('dl-btn-'+input.id);if(dlBtn)dlBtn.style.display='none';});document.getElementById('editKey').value='';document.getElementById('submitBtn').textContent='SIMPAN DATA';photoCache={};},0)});
 </script>
-
 </body>
 </html>
